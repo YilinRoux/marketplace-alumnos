@@ -33,15 +33,13 @@ Resolver la necesidad de un espacio digital seguro y centralizado donde los alum
 ## Estructura del Proyecto
 
 apps/
-├─ frontend → Aplicación web (Next.js)
-├─ backend → API (Express)
-└─ docs → Documentación del proyecto
+frontend → Aplicación web (Next.js)
+backend → API (Express)
+docs → Documentación del proyecto
 
 packages/
-└─ configuraciones compartidas
+configuraciones compartidas
 
-yaml
-Copiar código
 
 ---
 
