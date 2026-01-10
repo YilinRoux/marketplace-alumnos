@@ -1,0 +1,148 @@
+[33mcommit f39184a2fe57ad19b40997ea5af17a9bf593f964[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 03:58:37 2026 -0600
+
+    docker: agrega Dockerfile funcional para backend
+
+M	apps/backend/.dockerignore
+M	apps/backend/Dockerfile
+
+[33mcommit 4a2bfc83c356ddbd8a3fe8e9e1c124b0a6d609d7[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 03:51:45 2026 -0600
+
+    docker: agrega Dockerfile funcional para backend
+
+A	apps/backend/.dockerignore
+A	apps/backend/Dockerfile
+
+[33mcommit e496907b2aeff177fc79d7923913ac2d28a8d734[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:33:55 2026 -0600
+
+    elimina scripts build y lint del backend
+
+M	apps/backend/package.json
+
+[33mcommit 83f520f60484b8be0624dfce4e24b9196dcd837a[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:31:32 2026 -0600
+
+    deshabilita build del backend temporalmente
+
+M	apps/backend/package.json
+
+[33mcommit 115e123487bbc028cd2ab9022da13eda12d7459e[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:29:06 2026 -0600
+
+    agrega configuración básica de TypeScript en backend
+
+A	apps/backend/tsconfig.json
+
+[33mcommit 830a936ea7994ead9a41debc7d2299445c0adb83[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:25:06 2026 -0600
+
+    corrige pipeline eliminando lint del backend
+
+M	apps/backend/package.json
+
+[33mcommit e874bf3f6d24761ca6ebe8020261743fbab460f4[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:21:37 2026 -0600
+
+    elimina tarea lint de turborepo
+
+M	turbo.json
+
+[33mcommit 93f4bc32d4b5c0cf71b1a440ed39345f34184449[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:19:23 2026 -0600
+
+    ajusta pipeline CI eliminando lint temporalmente
+
+M	.github/workflows/ci.yml
+M	package.json
+
+[33mcommit 1e3d6322c15ff6c8328e45c960fda625dab718dc[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:16:37 2026 -0600
+
+    deshabilita lint en backend temporalmente
+
+M	apps/backend/package.json
+
+[33mcommit 6bd37b26e588c87671865ecc9732f1d5cdcaa04c[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m
+Author: Yilin Roux <dianaantoni11110@gmail.com>
+Date:   Sat Jan 10 02:08:23 2026 -0600
+
+    chore: first project setup
+
+A	.github/workflows/ci.yml
+A	.gitignore
+A	.npmrc
+A	.vscode/settings.json
+A	Docker
+A	README.md
+A	apps/backend/package.json
+A	apps/backend/src/index.ts
+A	apps/docs/.gitignore
+A	apps/docs/README.md
+A	apps/docs/app/favicon.ico
+A	apps/docs/app/fonts/GeistMonoVF.woff
+A	apps/docs/app/fonts/GeistVF.woff
+A	apps/docs/app/globals.css
+A	apps/docs/app/layout.tsx
+A	apps/docs/app/page.module.css
+A	apps/docs/app/page.tsx
+A	apps/docs/eslint.config.js
+A	apps/docs/next.config.js
+A	apps/docs/package.json
+A	apps/docs/public/file-text.svg
+A	apps/docs/public/globe.svg
+A	apps/docs/public/next.svg
+A	apps/docs/public/turborepo-dark.svg
+A	apps/docs/public/turborepo-light.svg
+A	apps/docs/public/vercel.svg
+A	apps/docs/public/window.svg
+A	apps/docs/tsconfig.json
+A	apps/frontend/.gitignore
+A	apps/frontend/README.md
+A	apps/frontend/app/favicon.ico
+A	apps/frontend/app/fonts/GeistMonoVF.woff
+A	apps/frontend/app/fonts/GeistVF.woff
+A	apps/frontend/app/globals.css
+A	apps/frontend/app/layout.tsx
+A	apps/frontend/app/page.module.css
+A	apps/frontend/app/page.tsx
+A	apps/frontend/eslint.config.js
+A	apps/frontend/next.config.js
+A	apps/frontend/package.json
+A	apps/frontend/public/file-text.svg
+A	apps/frontend/public/globe.svg
+A	apps/frontend/public/next.svg
+A	apps/frontend/public/turborepo-dark.svg
+A	apps/frontend/public/turborepo-light.svg
+A	apps/frontend/public/vercel.svg
+A	apps/frontend/public/window.svg
+A	apps/frontend/tsconfig.json
+A	package.json
+A	packages/eslint-config/README.md
+A	packages/eslint-config/base.js
+A	packages/eslint-config/next.js
+A	packages/eslint-config/package.json
+A	packages/eslint-config/react-internal.js
+A	packages/typescript-config/base.json
+A	packages/typescript-config/nextjs.json
+A	packages/typescript-config/package.json
+A	packages/typescript-config/react-library.json
+A	packages/ui/eslint.config.mjs
+A	packages/ui/package.json
+A	packages/ui/src/button.tsx
+A	packages/ui/src/card.tsx
+A	packages/ui/src/code.tsx
+A	packages/ui/tsconfig.json
+A	pnpm-lock.yaml
+A	pnpm-workspace.yaml
+A	turbo.json
