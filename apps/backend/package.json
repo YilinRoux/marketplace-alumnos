@@ -2,10 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-  "dev": "ts-node-dev src/index.ts",
-  "build": "echo \"backend build skipped\""
-  },
+ "scripts": {
+  "dev": "ts-node-dev src/index.ts"
+}
+,
   "dependencies": {
     "express": "^5.2.1"
   },
