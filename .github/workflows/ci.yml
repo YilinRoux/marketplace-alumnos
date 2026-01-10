@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
 
 jobs:
   build:
@@ -20,6 +22,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-
-      - name: Build
+      - name: Build all apps
         run: pnpm build
