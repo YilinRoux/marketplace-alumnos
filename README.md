@@ -3,6 +3,9 @@
 Aplicación web tipo **marketplace** diseñada para que alumnos puedan **publicar, vender, intercambiar o solicitar productos y servicios** dentro de su comunidad educativa.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 009cca76e5ac60ae407de0440bad4a584a95e07f
 >  **Carpeta principal para entregables:** `apps/doc7tareaindividual`  
 > Contiene todos los documentos y entregables individuales y de equipo (PDFs, definiciones, investigaciones).
 
@@ -107,6 +110,7 @@ Estado del Proyecto
 
 Proyecto en fase inicial, preparado para crecer de forma escalable siguiendo prácticas reales de la industria.
 La carpeta tareaindividual contiene los entregables individuales y de equipo, incluyendo documentos, investigación y definiciones de proyecto.
+<<<<<<< HEAD
 =======
 El proyecto está construido siguiendo **buenas prácticas de la industria**, usando un **monorepo**, automatización con **CI/CD** y herramientas modernas desde el inicio.
 
@@ -265,3 +269,5 @@ Estado del Proyecto
 
  
 >>>>>>> dev
+=======
+>>>>>>> 009cca76e5ac60ae407de0440bad4a584a95e07f

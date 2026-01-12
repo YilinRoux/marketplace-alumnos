@@ -2,10 +2,19 @@
   "name": "marketplace-alumnos",
   "private": true,
   "scripts": {
+<<<<<<< HEAD
   "dev": "turbo run dev",
   "build": "turbo run build"
 }
 ,
+=======
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+>>>>>>> 009cca76e5ac60ae407de0440bad4a584a95e07f
   "devDependencies": {
     "prettier": "^3.7.4",
     "turbo": "^2.7.3",

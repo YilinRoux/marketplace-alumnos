@@ -3,8 +3,11 @@ name: CI
 on:
   push:
     branches: [main, dev]
+<<<<<<< HEAD
   pull_request:
     branches: [main, dev]
+=======
+>>>>>>> 009cca76e5ac60ae407de0440bad4a584a95e07f
 
 jobs:
   build:
@@ -22,5 +25,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+<<<<<<< HEAD
       - name: Build all apps
+=======
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+>>>>>>> 009cca76e5ac60ae407de0440bad4a584a95e07f
         run: pnpm build

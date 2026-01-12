@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -48,9 +47,4 @@ a {
   .imgDark {
     display: unset;
   }
-=======
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
->>>>>>> 009cca76e5ac60ae407de0440bad4a584a95e07f
 }
