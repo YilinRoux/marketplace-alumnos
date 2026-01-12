@@ -1,18 +1,11 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-  "test": "echo \"Error: no test specified\" && exit 1",
-  "dev": "ts-node-dev src/index.ts",
-  "build": "tsc",
-  "lint": "eslint ."
+  "private": true,
+ "scripts": {
+  "dev": "ts-node-dev src/index.ts"
 }
 ,
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "express": "^5.2.1"
   },
