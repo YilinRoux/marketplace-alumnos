@@ -1,10 +1,4 @@
-## UI Inicial – UniMarket
-
-Pantalla base del proyecto UniMarket.
-Se eliminó el boilerplate de Turborepo y Next.js.
-
-
-# UniMarket
+# UniMarket - Frontend
 
 Proyecto desarrollado para la materia **Desarrollo Web Profesional**.  
 UniMarket es un **marketplace universitario** que permite a estudiantes
@@ -22,7 +16,16 @@ apps/
  ├─ backend/     → API y lógica del servidor
  ├─ frontend/    → Aplicación web (Next.js)
  └─ docs/        → Documentación del proyecto
+```
 
+---
+
+## UI Inicial
+
+Pantalla base del proyecto UniMarket.
+Se eliminó el boilerplate de Turborepo y Next.js.
+
+---
 
 ## Getting Started
 
@@ -39,4 +42,3 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-

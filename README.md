@@ -2,7 +2,7 @@
 
 Aplicación web tipo **marketplace** diseñada para que alumnos puedan **publicar, vender, intercambiar o solicitar productos y servicios** dentro de su comunidad educativa.
 
->  **Carpeta principal para entregables:** `apps/doc7tareaindividual`  
+>  **Carpeta principal para entregables:** `apps/docs/tareaindividual`  
 > Contiene todos los documentos y entregables individuales y de equipo (PDFs, definiciones, investigaciones).
 
 El proyecto está construido siguiendo **buenas prácticas de la industria**, usando un **monorepo**, automatización con **CI/CD** y herramientas modernas desde el inicio.
@@ -35,17 +35,16 @@ Resolver la necesidad de un espacio digital seguro y centralizado donde los alum
 
 ## Estructura del Proyecto
 
-
-
+```
 apps/
-frontend → Aplicación web (Next.js)
-backend → API (Express)
-docs → Documentación del proyecto
-tareaindividual → Entregables individuales y de equipo
+├─ frontend → Aplicación web (Next.js)
+├─ backend → API (Express)
+└─ docs → Documentación del proyecto
+    └─ tareaindividual → Entregables individuales y de equipo
 
 packages/
-configuraciones compartidas
-
+└─ configuraciones compartidas
+```
 
 ---
 
@@ -58,51 +57,53 @@ configuraciones compartidas
 ### Instalar dependencias
 ```bash
 pnpm install
+```
 
-Levantar el proyecto (frontend + backend)
+### Levantar el proyecto (frontend + backend)
+```bash
 pnpm dev
+```
 
+**Frontend:** http://localhost:3000
 
-Frontend: http://localhost:3000
+**Backend:** http://localhost:4000
 
-Backend: http://localhost:4000
+---
 
-CI/CD
+## CI/CD
 
 El proyecto cuenta con un pipeline de integración continua configurado con GitHub Actions, el cual:
 
-Instala dependencias
+- Instala dependencias
+- Ejecuta procesos de build
+- Valida que el proyecto compile correctamente
 
-Ejecuta procesos de build
+---
 
-Valida que el proyecto compile correctamente
+## Flujo de Ramas
 
-
-Flujo de Ramas
-
-main → Rama estable
-
-dev → Rama de desarrollo
-
-feature/* → Nuevas funcionalidades
+- **main** → Rama estable
+- **dev** → Rama de desarrollo
+- **feature/*** → Nuevas funcionalidades
 
 Ejemplo:
-
+```bash
 feature/devops-setup
+```
 
-Roles del Equipo
+---
 
-TL (Tech Lead): Arquitectura y decisiones técnicas
+## Roles del Equipo
 
-FE (Frontend): Desarrollo de la interfaz
+- **TL (Tech Lead):** Arquitectura y decisiones técnicas
+- **FE (Frontend):** Desarrollo de la interfaz
+- **BE (Backend):** Desarrollo de la API
+- **DO (DevOps):** Monorepo, Docker y CI/CD
+- **QA:** Testing y control de calidad
 
-BE (Backend): Desarrollo de la API
+---
 
-DO (DevOps): Monorepo, Docker y CI/CD
-
-QA: Testing y control de calidad
-
-Estado del Proyecto
+## Estado del Proyecto
 
 Proyecto en fase inicial, preparado para crecer de forma escalable siguiendo prácticas reales de la industria.
 La carpeta tareaindividual contiene los entregables individuales y de equipo, incluyendo documentos, investigación y definiciones de proyecto.
