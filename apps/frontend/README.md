@@ -70,6 +70,28 @@ app/
 - `/profile/edit` - Editar información del perfil
 - `/admin` - Panel de administración (solo personal autorizado)
 
+## ⌨️ Plan de Navegación Accesible por Teclado 
+
+La barra de navegación (Navbar) está diseñada para ser completamente funcional sin el uso del mouse, permitiendo que los usuarios naveguen únicamente con el teclado.
+
+Objetivos de accesibilidad:
+
+- Permitir el recorrido de los elementos de navegación mediante la tecla **Tab**.
+- Garantizar un orden lógico de enfoque (tabIndex).
+- Asegurar compatibilidad con lectores de pantalla.
+- Facilitar el acceso rápido al contenido principal.
+
+Estrategias implementadas y planificadas:
+
+- Uso de la etiqueta semántica `<nav>` para definir la navegación principal.
+- Enlaces implementados con `next/link`, los cuales son navegables por teclado de forma nativa.
+- Orden natural del DOM para mantener un flujo correcto de navegación al usar **Tab**.
+- Uso controlado de `tabIndex={0}` únicamente cuando es necesario.
+- Implementación de un enlace **"Saltar al contenido principal" (Skip to Content)** visible al recibir foco.
+- Indicadores visuales de foco (`:focus`) para que el usuario identifique claramente el elemento activo.
+- Pruebas manuales de navegación sin mouse para validar la experiencia del usuario.
+
+
 ## 🛠️ Tecnologías
 
 - **Framework**: Next.js 15 (App Router)
