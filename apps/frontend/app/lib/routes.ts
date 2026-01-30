@@ -24,6 +24,12 @@ export const ROUTES = {
   
     // Supervisión (Personal Autorizado )
     ADMIN: "/admin",
+
+    // Páginas de Error
+    ERROR: {
+      SERVER_ERROR: "/500", // Error interno del servidor
+      NOT_FOUND: "/404",    // Página no encontrada
+    },
   } as const;
   
   // Tipo para usar en props si fuera necesario
@@ -32,7 +38,6 @@ export const ROUTES = {
 // Ejemplo de uso 
 
 /**
- * 
  *  import { ROUTES } from '@/lib/routes';
  *  import { useRouter } from 'next/navigation';
  * 
