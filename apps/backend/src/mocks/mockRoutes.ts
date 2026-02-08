@@ -132,7 +132,13 @@ router.get("/users", (_req: Request, res: Response) => {
  *         description: Usuario no encontrado
  */
 router.get("/users/:id", (req: Request, res: Response) => {
-    const userId = parseInt(req.params.id);
+    const rawId = req.params.id;
+
+    if (typeof rawId !== "string") {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const userId = parseInt(rawId, 10);
     const user = mockUsers.find((u) => u.id === userId);
 
     if (!user) {
@@ -143,11 +149,9 @@ router.get("/users/:id", (req: Request, res: Response) => {
         });
     }
 
-    res.json({
-        success: true,
-        data: user,
-    });
+    res.json({ success: true, data: user });
 });
+
 
 /**
  * @openapi
@@ -247,7 +251,13 @@ router.get("/products", (req: Request, res: Response) => {
  *         description: Producto no encontrado
  */
 router.get("/products/:id", (req: Request, res: Response) => {
-    const productId = parseInt(req.params.id);
+    const rawId = req.params.id;
+
+    if (typeof rawId !== "string") {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const productId = parseInt(rawId, 10);
     const product = mockProducts.find((p) => p.id === productId);
 
     if (!product) {
@@ -258,11 +268,9 @@ router.get("/products/:id", (req: Request, res: Response) => {
         });
     }
 
-    res.json({
-        success: true,
-        data: product,
-    });
+    res.json({ success: true, data: product });
 });
+
 
 // ============================================
 // ENDPOINTS DE ERROR (Error Simulation)
@@ -299,7 +307,13 @@ router.get("/products/:id", (req: Request, res: Response) => {
  *         description: Service Unavailable
  */
 router.get("/error/:code", (req: Request, res: Response) => {
-    const errorCode = parseInt(req.params.code) as keyof typeof errorMessages;
+    const rawCode = req.params.code;
+
+    if (typeof rawCode !== "string") {
+        return res.status(400).json({ error: "Código inválido" });
+    }
+
+    const errorCode = parseInt(rawCode, 10) as keyof typeof errorMessages;
 
     if (!errorMessages[errorCode]) {
         return res.status(400).json({
