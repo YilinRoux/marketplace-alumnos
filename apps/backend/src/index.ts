@@ -3,6 +3,7 @@ import pinoHttp from "pino-http";
 import swaggerUi from "swagger-ui-express";
 import { logger } from "./logger";
 import { swaggerSpec } from "./swagger";
+import mockRoutes from "./mocks/mockRoutes";
 
 const app = express();
 
@@ -13,6 +14,9 @@ app.use(express.json());
 
 // Swagger UI
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Mock endpoints para pruebas del frontend
+app.use("/api/mock", mockRoutes);
 
 /**
  * @openapi
