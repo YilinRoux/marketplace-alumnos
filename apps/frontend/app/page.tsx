@@ -4,7 +4,7 @@ export default function HomePage() {
       <h1 id="home-title">UNIMARKET</h1>
 
       <p className="hero-subtitle">
-        Tienda para la universidad UTT
+        Tienda para la universidad UTTc
       </p>
 
       <nav aria-label="Acciones principales">
