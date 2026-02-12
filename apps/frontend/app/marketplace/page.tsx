@@ -1,8 +1,15 @@
 export default function MarketplacePage() {
   return (
-    <div>
+    <main tabIndex={-1}>
       <h1>Marketplace</h1>
-      {/* Listado general, búsqueda y filtros */}
-    </div>
+
+      <section style={{ display: "grid", gap: "1.5rem" }}>
+        <article className="card">
+          <h2>Producto ejemplo</h2>
+          <p>Descripción corta del producto.</p>
+          <button>Ver producto</button>
+        </article>
+      </section>
+    </main>
   );
 }

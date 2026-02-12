@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const tituloRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    tituloRef.current?.focus();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +33,15 @@ export default function LoginPage() {
         background: "linear-gradient(to bottom, #000000, #111827)",
       }}
     >
-      <form onSubmit={handleSubmit} className="login-container">
-        <h1 className="login-title">Iniciar sesión</h1>
+      <form onSubmit={handleSubmit} className="login-container" aria-labelledby="login-title">
+        <h1
+          id="login-title"
+          className="login-title"
+          ref={tituloRef}
+          tabIndex={-1}
+        >
+          Iniciar sesión
+        </h1>
 
         <label htmlFor="email" className="login-label">
           Correo institucional
