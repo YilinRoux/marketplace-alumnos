@@ -1,39 +1,124 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from './lib/routes';
+import Link from "next/link";
+import styles from "./page.module.css";
 
-export default function Home() {
-  const router = useRouter();
 
+export default function HomePage() {
   return (
-    <main style={{ textAlign: 'center', marginTop: '100px' }}>
-      <h1>Bienvenido a UniMarket</h1>
-      <p>La mejor plataforma para intercambiar artículos en la universidad.</p>
+    <section className={styles.container}>
+      {/* HERO */}
+      <header className={styles.hero}>
+        <div className={styles.heroContent}>
+          <h1>
+            UNIMARKET <br />
+            <span>Ideal para el intercambio universitario</span>
+          </h1>
 
-      <div style={{ marginTop: '20px' }}>
-        <Link
-          href="/marketplace"
-          style={{
-            backgroundColor: '#cce0ff',
-            color: '#000',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            fontWeight: 'bold',
-          }}
-        >
-          Explorar Productos
-        </Link>
-      </div>
+          <p>
+            Compra, vende o intercambia productos entre estudiantes de forma
+            segura y sencilla.
+          </p>
 
-      <div style={{ marginTop: '20px' }}>
-        <Link href={ROUTES.AUTH.LOGIN}>Login</Link>
-        <br />
-        <button onClick={() => router.push(ROUTES.AUTH.LOGIN)}>
-          Login
-        </button>
-      </div>
-    </main>
+          <Link href="/productos" className={styles.primaryButton}>
+            Ver productos
+          </Link>
+        </div>
+
+        <div
+          className={styles.heroImage}
+          aria-hidden="true"
+        />
+      </header>
+
+      {/* CATEGORÍAS */}
+      <section
+        className={styles.categories}
+        aria-labelledby="categories-title"
+      >
+        <h2 id="categories-title">Categorías destacadas</h2>
+
+        <ul className={styles.categoryGrid}>
+          <li>
+            <button className={styles.card}>
+              <span className={styles.icon}></span>
+              <span>Material académico</span>
+            </button>
+          </li>
+          <li>
+            <button className={styles.card}>
+              <span className={styles.icon}></span>
+              <span>Tecnología</span>
+            </button>
+          </li>
+          <li>
+            <button className={styles.card}>
+              <span className={styles.icon}></span>
+              <span>Servicios</span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      {/* CÓMO FUNCIONA */}
+      <section
+        className={styles.howItWorks}
+        aria-labelledby="how-title"
+      >
+        <h2 id="how-title">¿Cómo funciona?</h2>
+
+        <ol className={styles.steps}>
+          <li>
+            <strong>1.</strong>
+            <p>Regístrate con tu cuenta universitaria</p>
+          </li>
+          <li>
+            <strong>2.</strong>
+            <p>Publica o busca productos fácilmente</p>
+          </li>
+          <li>
+            <strong>3.</strong>
+            <p>Conecta y concreta el intercambio</p>
+          </li>
+        </ol>
+      </section>
+
+      {/* FOOTER */}
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          
+          <div className={styles.footerBrand}>
+            <h3>UNIMARKET</h3>
+            <p>
+              Plataforma universitaria para comprar, vender e intercambiar
+              productos entre estudiantes.
+            </p>
+          </div>
+
+          <div className={styles.footerLinks}>
+            <h4>Enlaces</h4>
+            <ul>
+              <li>
+                <Link href="/">Inicio</Link>
+              </li>
+              <li>
+                <Link href="/productos">Productos</Link>
+              </li>
+              <li>
+                <Link href="/auth/login">Login</Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className={styles.footerContact}>
+            <h4>Contacto</h4>
+            <p>soportenimarket.edu</p>
+            <p> 2026 UNIMARKET. Todos los derechos reservados.</p>
+          </div>
+
+        </div>
+      </footer>
+
+    </section>
   );
 }
