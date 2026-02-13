@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Breadcrumbs from "./components/Breadcrumbs";
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-});
+import FocusManager from "./components/FocusManager";
+
 export const metadata: Metadata = {
-  title: "Marketplace universitario",
-  description: "Plataforma de compra y venta entre estudiantes",
+  title: "Unimarket",
+  description: "Marketplace universitario accesible",
 };
+
 export default function RootLayout({
   children,
 }: {
@@ -22,21 +16,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <a href="#main-content" className="skip-link">
+      <body>
+        {/* Accesibilidad: saltar al contenido */}
+        <a href="#contenido-principal" className="skip-link">
           Saltar al contenido principal
         </a>
-        <header>
-          <Navbar />
-          <Breadcrumbs />
-        </header>
-        <main id="main-content">
-          {children}
-        </main>
 
-        <footer>
-          <p>© 2026 UniMarket</p>
-        </footer>
+        <Navbar />
+        <Breadcrumbs />
+
+        {/* Manejo de foco accesible */}
+        <main id="contenido-principal">
+          <FocusManager>{children}</FocusManager>
+        </main>
       </body>
     </html>
   );

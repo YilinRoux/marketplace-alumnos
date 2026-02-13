@@ -1,35 +1,37 @@
-'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Breadcrumbs() {
-const pathname = usePathname();
-const pathSegments = pathname.split('/').filter(segment => segment !== '');
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
 
-return (
-    <nav aria-label="Breadcrumb" style={{ padding: '10px 20px', color: '#fff' }}>
-    <ol style={{ display: 'flex', listStyle: 'none', padding: 0 }}>
+  if (segments.length === 0) return null;
+
+  return (
+    <nav aria-label="Breadcrumb">
+      <ol style={{ padding: "8px 32px", display: "flex", gap: "8px" }}>
         <li>
-        <Link href="/">Inicio</Link>
-        {pathSegments.length > 0 && <span style={{ margin: '0 8px' }}>&gt;</span>}
+          <Link href="/">Inicio</Link>
         </li>
-        {pathSegments.map((segment, index) => {
-        const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
-        const isLast = index === pathSegments.length - 1;
-        return (
+        {segments.map((segment, index) => {
+          const href = "/" + segments.slice(0, index + 1).join("/");
+          const isLast = index === segments.length - 1;
+
+          return (
             <li key={href}>
-            {isLast ? (
-                <span>{segment}</span>
-            ) : (
-                <>
+              <span aria-hidden="true">/</span>{" "}
+              {isLast ? (
+                <span aria-current="page">{segment}</span>
+              ) : (
                 <Link href={href}>{segment}</Link>
-                <span style={{ margin: '0 8px' }}>&gt;</span>
-                </>
-            )}
+              )}
             </li>
-        );
+          );
         })}
-    </ol>
+      </ol>
     </nav>
-);
+  );
 }
