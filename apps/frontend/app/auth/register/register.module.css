@@ -6,7 +6,7 @@
 
 .leftSide {
   flex: 1;
-  background-image: url("/images/landing.jpg"); /* usa tu imagen */
+  background-image: url("/images/login.jpg");
   background-size: cover;
   background-position: center;
 }
@@ -32,6 +32,10 @@
   font-size: 26px;
   font-weight: 700;
   margin-bottom: 8px;
+  color: #2563eb;
+}
+
+.brand {
   color: #2563eb;
 }
 
@@ -64,10 +68,6 @@
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
-.input::placeholder {
-  color: #9ca3af;
-}
-
 .input:focus {
   outline: none;
   border: 2px solid #2563eb;
@@ -92,24 +92,54 @@
   transform: translateY(-2px);
 }
 
-.registerText {
+.button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.loading {
+  background-color: #6b7280;
+}
+
+.success {
+  background-color: #16a34a;
+}
+
+.error {
+  background-color: #dc2626;
+}
+
+.feedback {
+  min-height: 24px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  color: #111827;
+}
+
+.loginText {
   margin-top: 25px;
   text-align: center;
   font-size: 14px;
   color: #6b7280;
 }
 
-.registerLink {
+.loginLink {
   color: #2563eb;
   font-weight: 600;
   text-decoration: none;
 }
 
-.registerLink:hover {
+.loginLink:hover {
   text-decoration: underline;
 }
 
-/* RESPONSIVE */
+.button:focus-visible,
+.input:focus-visible,
+.loginLink:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+
 @media (max-width: 900px) {
   .container {
     flex-direction: column;
@@ -122,4 +152,56 @@
   .rightSide {
     padding: 20px;
   }
+  /* ===== Mensajes dinámicos ===== */
+
+.successMessage {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.loadingMessage {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+/* ===== Texto helper debajo del label ===== */
+
+.helperText {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+/* ===== Password wrapper con ojito ===== */
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordWrapper .input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.eyeButton:focus-visible {
+  outline: 2px solid #2563eb;
+  border-radius: 4px;
+}
+
 }
