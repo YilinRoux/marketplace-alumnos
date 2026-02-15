@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import styles from "./login.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,7 +13,6 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Simulación de login (frontend)
     if (email && password) {
       localStorage.setItem("auth", "true");
       router.push("/productos");
@@ -19,48 +20,59 @@ export default function LoginPage() {
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(to bottom, #000000, #111827)",
-      }}
-    >
-      <form onSubmit={handleSubmit} className="login-container">
-        <h1 className="login-title">Iniciar sesión</h1>
+    <main className={styles.container}>
+      
+      
+      <div className={styles.leftSide}></div>
 
-        <label htmlFor="email" className="login-label">
-          Correo institucional
-        </label>
-        <input
-          id="email"
-          type="email"
-          className="login-input"
-          placeholder="correo@universidad.edu"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+      <div className={styles.rightSide}>
+        <form onSubmit={handleSubmit} className={styles.card}>
+          
+          <h1 className={styles.title}>UNIMARKET</h1>
+          <p className={styles.subtitle}>
+            Inicia sesión con tu cuenta universitaria
+          </p>
 
-        <label htmlFor="password" className="login-label">
-          Contraseña
-        </label>
-        <input
-          id="password"
-          type="password"
-          className="login-input"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <div className={styles.inputGroup}>
+            <label htmlFor="email">Correo institucional</label>
+            <input
+              id="email"
+              type="email"
+              className={styles.input}
+              placeholder="correo@universidad.edu"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <button type="submit" className="btn-primary">
-          Iniciar Sesion
-        </button>
-      </form>
+          <div className={styles.inputGroup}>
+            <label htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              className={styles.input}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" className={styles.button}>
+            Iniciar sesión
+          </button>
+
+          <p className={styles.registerText}>
+            ¿No tienes una cuenta?{" "}
+            <Link href="/auth/register" className={styles.registerLink}>
+              Créala
+            </Link>
+          </p>
+
+        </form>
+      </div>
+
     </main>
   );
 }

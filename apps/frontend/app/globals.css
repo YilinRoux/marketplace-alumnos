@@ -28,8 +28,15 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  body {
+  margin: 0;
+  body {
+  color: #111827;
+}
+
+  font-family: Arial, sans-serif;
+}
+
 }
 
 * {
