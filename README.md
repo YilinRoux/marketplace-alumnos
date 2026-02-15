@@ -203,45 +203,21 @@ Estado del Proyecto
 
 
 
+## CI/CD – Validación del Frontend
 
+El repositorio cuenta con un pipeline de Integración Continua configurado en:
 
+.github/workflows/ci.yml
 
+Este pipeline ejecuta:
 
+- pnpm install
+- pnpm build
 
+El comando `pnpm build` construye todas las aplicaciones del monorepo, incluyendo el frontend desarrollado con Next.js.  
+Si el frontend presenta errores de compilación, el build falla automáticamente y el Pull Request no puede integrarse.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+La configuración de protección de ramas requiere permisos de administrador del repositorio, por lo que debe ser activada por el propietario del proyecto.
 
 
 

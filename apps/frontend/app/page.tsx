@@ -95,7 +95,7 @@ export default function HomePage() {
       {/* FOOTER */}
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
-          
+
           <div className={styles.footerBrand}>
             <h3>UNIMARKET</h3>
             <p>

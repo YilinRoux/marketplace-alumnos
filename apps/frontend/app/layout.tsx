@@ -17,11 +17,18 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        {/* Accesibilidad: saltar al contenido */}
+        <a href="#contenido-principal" className="skip-link">
+          Saltar al contenido principal
+        </a>
+
         <Navbar />
         <Breadcrumbs />
 
         {/* Manejo de foco accesible */}
-        <FocusManager>{children}</FocusManager>
+        <main id="contenido-principal">
+          <FocusManager>{children}</FocusManager>
+        </main>
       </body>
     </html>
   );
