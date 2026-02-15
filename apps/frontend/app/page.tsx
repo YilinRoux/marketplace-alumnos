@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import styles from "./page.module.css";
-import Image from "next/image";
 
 export default function HomePage() {
   return (
     <section className={styles.container}>
-      
       {/* HERO */}
       <header className={styles.hero}>
         <div className={styles.heroContent}>
@@ -26,16 +24,10 @@ export default function HomePage() {
           </Link>
         </div>
 
-      <div className={styles.heroImage}>
-  <Image
-    src="/images/landing.jpg"
-    alt="Landing UNIMARKET"
-    fill
-    className={styles.heroImg}
-    priority
-  />
-</div>
-
+        <div
+          className={styles.heroImage}
+          aria-hidden="true"
+        />
       </header>
 
       {/* CATEGORÍAS */}
@@ -48,21 +40,19 @@ export default function HomePage() {
         <ul className={styles.categoryGrid}>
           <li>
             <button className={styles.card}>
-              <div className={styles.iconBox}>📚</div>
+              <span className={styles.icon}></span>
               <span>Material académico</span>
             </button>
           </li>
-
           <li>
             <button className={styles.card}>
-              <div className={styles.iconBox}>💻</div>
+              <span className={styles.icon}></span>
               <span>Tecnología</span>
             </button>
           </li>
-
           <li>
             <button className={styles.card}>
-              <div className={styles.iconBox}>🛠</div>
+              <span className={styles.icon}></span>
               <span>Servicios</span>
             </button>
           </li>
@@ -107,16 +97,22 @@ export default function HomePage() {
           <div className={styles.footerLinks}>
             <h4>Enlaces</h4>
             <ul>
-              <li><Link href="/">Inicio</Link></li>
-              <li><Link href="/productos">Productos</Link></li>
-              <li><Link href="/auth/login">Login</Link></li>
+              <li>
+                <Link href="/">Inicio</Link>
+              </li>
+              <li>
+                <Link href="/productos">Productos</Link>
+              </li>
+              <li>
+                <Link href="/auth/login">Login</Link>
+              </li>
             </ul>
           </div>
 
           <div className={styles.footerContact}>
             <h4>Contacto</h4>
-            <p>soporte@unimarket.edu</p>
-            <p>© 2026 UNIMARKET</p>
+            <p>soportenimarket.edu</p>
+            <p> 2026 UNIMARKET. Todos los derechos reservados.</p>
           </div>
 
         </div>
