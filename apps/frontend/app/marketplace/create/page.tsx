@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "./marketplace.module.css";
+import styles from "../marketplace.module.css";
+
 
 interface Product {
   id: number;
