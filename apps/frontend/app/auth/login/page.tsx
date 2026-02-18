@@ -18,13 +18,17 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Simulación de login frontend
     if (email && password) {
       const fakeUser = {
         name: "Usuario",
         email,
+        avatar: "/images/default-user.png",
       };
 
       localStorage.setItem("user", JSON.stringify(fakeUser));
+
+      // Notifica a todo el sistema (Navbar, etc.)
       window.dispatchEvent(new Event("storage"));
 
       router.push("/marketplace");

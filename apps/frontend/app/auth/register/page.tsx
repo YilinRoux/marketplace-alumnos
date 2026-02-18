@@ -15,13 +15,14 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
+
   const [message, setMessage] = useState("");
 
   const isDisabled =
@@ -35,7 +36,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      setStatus("error");
+    setStatus("error");
       setMessage("Las contraseñas no coinciden.");
       return;
     }
@@ -44,10 +45,8 @@ export default function RegisterPage() {
       setStatus("loading");
       setMessage("Creando cuenta...");
 
-      //  Simulación backend
       await new Promise((res) => setTimeout(res, 1500));
 
-      //  Login global
       login({
         name,
         email,
@@ -60,7 +59,7 @@ export default function RegisterPage() {
       setTimeout(() => {
         router.push("/marketplace");
       }, 1500);
-    } catch (err) {
+    } catch {
       setStatus("error");
       setMessage("Ocurrió un error.");
     }
@@ -71,18 +70,24 @@ export default function RegisterPage() {
       <div className={styles.leftSide}></div>
 
       <div className={styles.rightSide}>
-        <form onSubmit={handleSubmit} className={styles.card} noValidate>
+        <form
+          onSubmit={handleSubmit}
+          className={styles.card}
+          noValidate
+        >
           <h1 className={styles.title}>
             <span className={styles.brand}>UNI</span>MARKET
           </h1>
 
           <p className={styles.subtitle}>Crea tu cuenta</p>
 
-          <div className={styles.feedback} aria-live="polite">
+          <div
+            className={styles.feedback}
+            aria-live="polite"
+          >
             {message}
           </div>
 
-          {/* Nombre */}
           <div className={styles.inputGroup}>
             <label>Nombre completo</label>
             <input
@@ -93,7 +98,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Email */}
           <div className={styles.inputGroup}>
             <label>Email</label>
             <input
@@ -104,7 +108,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Password */}
           <div className={styles.inputGroup}>
             <label>Contraseña</label>
             <div className={styles.passwordWrapper}>
@@ -112,33 +115,42 @@ export default function RegisterPage() {
                 type={showPassword ? "text" : "password"}
                 className={styles.input}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
                 required
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() =>
+                  setShowPassword(!showPassword)
+                }
               >
                 👁
               </button>
             </div>
           </div>
 
-          {/* Confirm */}
           <div className={styles.inputGroup}>
             <label>Confirmar contraseña</label>
             <div className={styles.passwordWrapper}>
               <input
-                type={showConfirmPassword ? "text" : "password"}
+                type={
+                  showConfirmPassword ? "text" : "password"
+                }
                 className={styles.input}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) =>
+                  setConfirmPassword(e.target.value)
+                }
                 required
               />
               <button
                 type="button"
                 onClick={() =>
-                  setShowConfirmPassword(!showConfirmPassword)
+                  setShowConfirmPassword(
+                    !showConfirmPassword
+                  )
                 }
               >
                 👁
@@ -151,12 +163,17 @@ export default function RegisterPage() {
             className={styles.button}
             disabled={isDisabled}
           >
-            {status === "loading" ? "Creando..." : "Crear cuenta"}
+            {status === "loading"
+              ? "Creando..."
+              : "Crear cuenta"}
           </button>
 
           <p className={styles.loginText}>
             ¿Ya tienes cuenta?{" "}
-            <Link href="/auth/login" className={styles.loginLink}>
+            <Link
+              href="/auth/login"
+              className={styles.loginLink}
+            >
               Inicia sesión
             </Link>
           </p>

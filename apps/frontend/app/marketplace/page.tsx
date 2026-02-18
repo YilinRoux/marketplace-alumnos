@@ -230,5 +230,6 @@ export default function MarketplacePage() {
         </main>
       </div>
     </div>
+
   );
 }
