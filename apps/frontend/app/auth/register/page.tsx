@@ -4,15 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./register.module.css";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -41,22 +44,25 @@ export default function RegisterPage() {
       setStatus("loading");
       setMessage("Creando cuenta...");
 
+      //  Simulación backend
       await new Promise((res) => setTimeout(res, 1500));
 
-      const fakeUser = { name, email };
-      localStorage.setItem("user", JSON.stringify(fakeUser));
+      //  Login global
+      login({
+        name,
+        email,
+        avatar: "/images/default-user.png",
+      });
 
       setStatus("success");
-      setMessage(`Bienvenido ${name} 🎉 tu cuenta fue creada con éxito`);
+      setMessage(`Bienvenido ${name} 🎉`);
 
       setTimeout(() => {
-  router.push("/marketplace");
-}, 2000);
-
-
+        router.push("/marketplace");
+      }, 1500);
     } catch (err) {
       setStatus("error");
-      setMessage("Ocurrió un error al crear la cuenta.");
+      setMessage("Ocurrió un error.");
     }
   };
 
@@ -66,39 +72,20 @@ export default function RegisterPage() {
 
       <div className={styles.rightSide}>
         <form onSubmit={handleSubmit} className={styles.card} noValidate>
-
           <h1 className={styles.title}>
             <span className={styles.brand}>UNI</span>MARKET
           </h1>
 
-          <p className={styles.subtitle}>
-            Crea tu cuenta
-          </p>
+          <p className={styles.subtitle}>Crea tu cuenta</p>
 
-          <div
-            className={`${styles.feedback} ${
-              status === "success"
-                ? styles.successMessage
-                : status === "error"
-                ? styles.errorMessage
-                : status === "loading"
-                ? styles.loadingMessage
-                : ""
-            }`}
-            aria-live="polite"
-            role="status"
-          >
+          <div className={styles.feedback} aria-live="polite">
             {message}
           </div>
 
           {/* Nombre */}
           <div className={styles.inputGroup}>
             <label>Nombre completo</label>
-            <span className={styles.helperText}>
-              Ingresa tu nombre como aparecerá en la plataforma
-            </span>
             <input
-              type="text"
               className={styles.input}
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -108,12 +95,8 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div className={styles.inputGroup}>
-            <label>Correo electrónico</label>
-            <span className={styles.helperText}>
-              Puedes usar cualquier correo válido
-            </span>
+            <label>Email</label>
             <input
-              type="email"
               className={styles.input}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -124,10 +107,6 @@ export default function RegisterPage() {
           {/* Password */}
           <div className={styles.inputGroup}>
             <label>Contraseña</label>
-            <span className={styles.helperText}>
-              Mínimo 6 caracteres
-            </span>
-
             <div className={styles.passwordWrapper}>
               <input
                 type={showPassword ? "text" : "password"}
@@ -138,22 +117,16 @@ export default function RegisterPage() {
               />
               <button
                 type="button"
-                className={styles.eyeButton}
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label="Mostrar u ocultar contraseña"
               >
-                {showPassword ? "🙈" : "👁"}
+                👁
               </button>
             </div>
           </div>
 
-          {/* Confirm Password */}
+          {/* Confirm */}
           <div className={styles.inputGroup}>
             <label>Confirmar contraseña</label>
-            <span className={styles.helperText}>
-              Debe coincidir con la contraseña anterior
-            </span>
-
             <div className={styles.passwordWrapper}>
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -164,39 +137,29 @@ export default function RegisterPage() {
               />
               <button
                 type="button"
-                className={styles.eyeButton}
                 onClick={() =>
                   setShowConfirmPassword(!showConfirmPassword)
                 }
-                aria-label="Mostrar u ocultar contraseña"
               >
-                {showConfirmPassword ? "🙈" : "👁"}
+                👁
               </button>
             </div>
           </div>
 
           <button
             type="submit"
-            className={`${styles.button}
-              ${status === "loading" ? styles.loading : ""}
-              ${status === "success" ? styles.success : ""}
-              ${status === "error" ? styles.error : ""}`}
+            className={styles.button}
             disabled={isDisabled}
           >
-            {status === "loading"
-              ? "Creando..."
-              : status === "success"
-              ? "Cuenta creada"
-              : "Crear cuenta"}
+            {status === "loading" ? "Creando..." : "Crear cuenta"}
           </button>
 
           <p className={styles.loginText}>
-            ¿Ya tienes una cuenta?{" "}
+            ¿Ya tienes cuenta?{" "}
             <Link href="/auth/login" className={styles.loginLink}>
               Inicia sesión
             </Link>
           </p>
-
         </form>
       </div>
     </main>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "./components/Navbar";
-import Breadcrumbs from "./components/Breadcrumbs";
+import ConditionalBreadcrumbs from "./components/ConditionalBreadcrumbs";
 import FocusManager from "./components/FocusManager";
 
 export const metadata: Metadata = {
@@ -16,14 +16,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <link
+  rel="stylesheet"
+  href="https://cdn-uicons.flaticon.com/uicons-bold-straight/css/uicons-bold-straight.css"
+/>
+
       <body>
-        {/* Accesibilidad: saltar al contenido */}
+        {/* Accesibilidad: */}
         <a href="#contenido-principal" className="skip-link">
           Saltar al contenido principal
         </a>
 
         <Navbar />
-        <Breadcrumbs />
+
+        <ConditionalBreadcrumbs />
 
         {/* Manejo de foco accesible */}
         <main id="contenido-principal">
