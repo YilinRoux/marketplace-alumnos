@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/AuthContext";
@@ -12,21 +12,20 @@ export default function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Cerrar dropdown al hacer click fuera
-  const handleClickOutside = (e: MouseEvent) => {
-    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-      setOpen(false);
-    }
-  };
+  // FIX Bug 3: event listener dentro de useEffect (no en el render body)
+  // para evitar memory leaks y registros duplicados en cada render.
+  useEffect(() => {
+    if (!open) return;
 
-  // Registrar / limpiar evento de click fuera solo cuando el dropdown está abierto
-  if (typeof document !== "undefined") {
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") setOpen(false);

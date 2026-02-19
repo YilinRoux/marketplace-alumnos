@@ -19,7 +19,7 @@ export default function HomePage() {
             segura y sencilla.
           </p>
 
-          <Link href="/productos" className={styles.primaryButton}>
+          <Link href="/marketplace" className={styles.primaryButton}>
             Ver productos
           </Link>
         </div>

@@ -82,6 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const fetchUser = useCallback(async () => {
+        // Resetear a 'loading' antes de verificar — evita que useRequireAuth
+        // rediriga mientras la verificación está en curso (post-login)
+        setState(prev => ({ ...prev, status: "loading" }));
         try {
             const res = await fetch(`${BACKEND_URL}/auth/me`, {
                 credentials: "include",
