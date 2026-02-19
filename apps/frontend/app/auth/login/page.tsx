@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import styles from "./login.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,63 +18,84 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Simulación de login (frontend)
+    // Simulación de login frontend
     if (email && password) {
-      localStorage.setItem("auth", "true");
-      router.push("/productos");
+      const fakeUser = {
+        name: "Usuario",
+        email,
+        avatar: "/images/default-user.png",
+      };
+
+      localStorage.setItem("user", JSON.stringify(fakeUser));
+
+      // Notifica a todo el sistema (Navbar, etc.)
+      window.dispatchEvent(new Event("storage"));
+
+      router.push("/marketplace");
     }
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(to bottom, #000000, #111827)",
-      }}
-    >
-      <form onSubmit={handleSubmit} className="login-container" aria-labelledby="login-title">
-        <h1
-          id="login-title"
-          className="login-title"
-          ref={tituloRef}
-          tabIndex={-1}
+    <main className={styles.container}>
+      <div className={styles.leftSide}></div>
+
+      <div className={styles.rightSide}>
+        <form
+          onSubmit={handleSubmit}
+          className={styles.card}
+          aria-labelledby="login-title"
         >
-          Iniciar sesión
-        </h1>
+          <h1
+            id="login-title"
+            className={styles.title}
+            ref={tituloRef}
+            tabIndex={-1}
+          >
+            UNIMARKET
+          </h1>
 
-        <label htmlFor="email" className="login-label">
-          Correo institucional
-        </label>
-        <input
-          id="email"
-          type="email"
-          className="login-input"
-          placeholder="correo@universidad.edu"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          <p className={styles.subtitle}>
+            Inicia sesión con tu cuenta
+          </p>
 
-        <label htmlFor="password" className="login-label">
-          Contraseña
-        </label>
-        <input
-          id="password"
-          type="password"
-          className="login-input"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <div className={styles.inputGroup}>
+            <label htmlFor="email">Correo</label>
+            <input
+              id="email"
+              type="email"
+              className={styles.input}
+              placeholder="correo@universidad.edu"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <button type="submit" className="btn-primary">
-          Iniciar Sesion
-        </button>
-      </form>
+          <div className={styles.inputGroup}>
+            <label htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              className={styles.input}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" className={styles.button}>
+            Iniciar sesión
+          </button>
+
+          <p className={styles.registerText}>
+            ¿No tienes una cuenta?{" "}
+            <Link href="/auth/register" className={styles.registerLink}>
+              Créala
+            </Link>
+          </p>
+        </form>
+      </div>
     </main>
   );
 }
