@@ -9,6 +9,8 @@ import { logger } from "./logger";
 import { swaggerSpec } from "./swagger";
 import mockRoutes from "./mocks/mockRoutes";
 import { requireAuth } from "./middleware/auth";
+import productsRouter from "./routes/products.router";
+import categoriesRouter from "./routes/categories.router";
 
 // Supabase admin client (service role key for server-side token validation)
 const supabase = createClient(
@@ -37,6 +39,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Mock endpoints para pruebas del frontend
 app.use("/api/mock", mockRoutes);
+
+// ─── Marketplace routes ───────────────────────────────────────
+app.use("/api/products", productsRouter);
+app.use("/api/categories", categoriesRouter);
 
 // ─── Auth routes ─────────────────────────────────────────────
 
