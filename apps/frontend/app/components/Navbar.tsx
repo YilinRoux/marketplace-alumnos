@@ -1,55 +1,32 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../lib/AuthContext";
 import styles from "./Navbar.module.css";
 
-interface User {
-  name: string;
-  email: string;
-  avatar?: string;
-}
-
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
+  const { status, user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
-
-  const loadUser = () => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    } else {
-      setUser(null);
+  // Cerrar dropdown al hacer click fuera
+  const handleClickOutside = (e: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      setOpen(false);
     }
   };
 
-  useEffect(() => {
-    loadUser();
-
-    window.addEventListener("storage", loadUser);
-
-    return () => {
-      window.removeEventListener("storage", loadUser);
-    };
-  }, []);
-
-  
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const logout = () => {
-    localStorage.removeItem("user");
-    loadUser(); 
-  };
+  // Registrar / limpiar evento de click fuera solo cuando el dropdown está abierto
+  if (typeof document !== "undefined") {
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") setOpen(false);
@@ -59,36 +36,58 @@ export default function Navbar() {
     }
   };
 
+  const handleLogout = async () => {
+    setOpen(false);
+    await logout();
+    router.push("/");
+  };
+
   return (
     <header className={styles.navbar}>
       {/* LOGO */}
-      <Link href="/marketplace" className={styles.logo}>
+      <Link href="/" className={styles.logo}>
         <span>UNI</span>MARKET
       </Link>
 
       {/* SEARCH */}
       <input className={styles.search} placeholder="Buscar productos..." />
 
-      {/* USER */}
+      {/* USER AREA */}
       <div className={styles.userArea} ref={menuRef}>
-        {!user ? (
+
+        {/* Estado: loading → skeleton */}
+        {status === "loading" && (
+          <div className={styles.skeletonAvatar} aria-hidden="true" />
+        )}
+
+        {/* Estado: no autenticado */}
+        {status === "unauthenticated" && (
           <Link href="/auth/login" className={styles.loginBtn}>
             Iniciar sesión
           </Link>
-        ) : (
+        )}
+
+        {/* Estado: autenticado */}
+        {status === "authenticated" && user && (
           <>
+            {/* Botón Vender */}
+            <Link href="/marketplace/create" className={styles.sellBtn}>
+              + Vender
+            </Link>
+
+            {/* Avatar + dropdown */}
             <button
               className={styles.avatarBtn}
               onClick={() => setOpen(!open)}
               onKeyDown={handleKeyDown}
               aria-haspopup="menu"
               aria-expanded={open}
+              aria-label={`Menú de ${user.name}`}
             >
               <span className={styles.userName}>{user.name}</span>
-
               <img
                 src={user.avatar || "/images/default-user.png"}
-                alt="Usuario"
+                alt={user.name}
                 className={styles.avatar}
                 onError={(e) =>
                   ((e.target as HTMLImageElement).src = "/images/user.png")
@@ -98,17 +97,16 @@ export default function Navbar() {
 
             {open && (
               <div className={styles.dropdown} role="menu">
-                <Link href="/perfil" role="menuitem">
+                <Link href="/profile" role="menuitem" onClick={() => setOpen(false)}>
                   Perfil
                 </Link>
-                <Link href="/favoritos" role="menuitem">
-                  Favoritos
-                </Link>
-                <Link href="/mis-publicaciones" role="menuitem">
+                <Link href="/marketplace/mis-publicaciones" role="menuitem" onClick={() => setOpen(false)}>
                   Mis publicaciones
                 </Link>
 
-                <button onClick={logout} className={styles.logout}>
+                <hr className={styles.divider} />
+
+                <button onClick={handleLogout} className={styles.logout}>
                   Cerrar sesión
                 </button>
               </div>

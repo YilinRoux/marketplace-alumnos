@@ -8,6 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import { logger } from "./logger";
 import { swaggerSpec } from "./swagger";
 import mockRoutes from "./mocks/mockRoutes";
+import { requireAuth } from "./middleware/auth";
 
 // Supabase admin client (service role key for server-side token validation)
 const supabase = createClient(
@@ -128,25 +129,10 @@ app.post("/auth/set-session", async (req: Request, res: Response) => {
  *       401:
  *         description: No autenticado
  */
-app.get("/auth/me", async (req: Request, res: Response) => {
-  try {
-    const token = req.cookies?.access_token;
-    if (!token) {
-      res.status(401).json({ error: "No autenticado" });
-      return;
-    }
-
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) {
-      res.status(401).json({ error: "Token inválido o expirado" });
-      return;
-    }
-
-    res.json({ user: data.user });
-  } catch (err) {
-    logger.error({ err }, "Error en /auth/me");
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
+app.get("/auth/me", requireAuth, (req: Request, res: Response) => {
+  // requireAuth ya validó el token, hizo refresh si fue necesario,
+  // y cargó el perfil completo desde public.profiles en req.user
+  res.json({ user: req.user });
 });
 
 /**
@@ -160,10 +146,29 @@ app.get("/auth/me", async (req: Request, res: Response) => {
  *       200:
  *         description: Sesión cerrada correctamente
  */
-app.post("/auth/logout", (_req: Request, res: Response) => {
-  res.clearCookie("access_token", { path: "/" });
-  res.clearCookie("refresh_token", { path: "/" });
-  res.json({ ok: true });
+app.post("/auth/logout", async (req: Request, res: Response) => {
+  try {
+    const accessToken = req.cookies?.access_token;
+
+    // Invalidar el token en Supabase para prevenir replay attacks
+    if (accessToken) {
+      const { data: userData } = await supabase.auth.getUser(accessToken);
+      if (userData?.user?.id) {
+        await supabase.auth.admin.signOut(userData.user.id);
+        logger.info({ userId: userData.user.id }, "Sesión invalidada en Supabase");
+      }
+    }
+
+    res.clearCookie("access_token", { path: "/" });
+    res.clearCookie("refresh_token", { path: "/" });
+    res.json({ ok: true });
+  } catch (err) {
+    // Aunque falle la invalidación en Supabase, siempre limpiamos las cookies
+    logger.error({ err }, "Error en /auth/logout (cookies limpiadas de todas formas)");
+    res.clearCookie("access_token", { path: "/" });
+    res.clearCookie("refresh_token", { path: "/" });
+    res.json({ ok: true });
+  }
 });
 
 /**

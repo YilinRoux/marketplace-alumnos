@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "./marketplace.module.css";
+import { useRequireAuth } from "../hooks/useRequireAuth";
 
 interface Product {
   id: number;
@@ -48,6 +49,7 @@ const PRODUCTS: Product[] = [
 ];
 
 export default function MarketplacePage() {
+  const { isLoading } = useRequireAuth();
   const [favorites, setFavorites] = useState<number[]>([]);
   const [message, setMessage] = useState("");
 
@@ -64,6 +66,15 @@ export default function MarketplacePage() {
     const t = setTimeout(() => setLoading(false), 700);
     return () => clearTimeout(t);
   }, [search, category, condition, priceRange]);
+
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
+        <p style={{ color: "#6b7280", fontSize: "16px" }}>Verificando sesión...</p>
+      </div>
+    );
+  }
+
 
   const toggleFavorite = (id: number) => {
     if (favorites.includes(id)) {
@@ -188,11 +199,11 @@ export default function MarketplacePage() {
                         {product.category}
                       </span>
 
-                      {product.verified && (
+                      {/* {product.verified && (
                         <span className={styles.verified}>
                           ✔ Verificado
                         </span>
-                      )}
+                      )} */}
                     </div>
 
                     <h4 className={styles.title}>
@@ -205,22 +216,22 @@ export default function MarketplacePage() {
                         {product.description}
                       </p>
 
-                      <button
+                      {/* <button
                         type="button"
                         aria-label="Agregar a favoritos"
-                        className={`${styles.favoriteBtn} ${
-                          isFavorite ? styles.active : ""
-                        }`}
+                        className={`${styles.favoriteBtn} ${isFavorite ? styles.active : ""
+                          }`}
                         onClick={() => toggleFavorite(product.id)}
                       >
                         <i className="fi fi-bs-heart"></i>
-                      </button>
+                      </button> */}
                     </div>
 
                     <p className={styles.price}>${product.price}</p>
 
                     <button className={styles.contactBtn}>
-                      Contactar vendedor
+                      Ver producto
+                      {/* redirigir a /marketplace/[id] */}
                     </button>
                   </div>
                 </div>
