@@ -1,99 +1,133 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./marketplace.module.css";
+import { useRequireAuth } from "../hooks/useRequireAuth";
 
-interface Product {
-  id: number;
-  title: string;
-  category: string;
-  price: number;
-  verified: boolean;
-  image: string;
-  description: string;
-  condition: "Nuevo" | "Usado" | "Reacondicionado";
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-const PRODUCTS: Product[] = [
-  {
-    id: 1,
-    title: "Monitor UltraWide 34”",
-    category: "Tecnología",
-    price: 850,
-    verified: true,
-    image: "/placeholder.jpg",
-    description: "Resolución 4K, ideal para diseño.",
-    condition: "Nuevo",
-  },
-  {
-    id: 2,
-    title: "Laptop Lenovo",
-    category: "Laptops",
-    price: 1200,
-    verified: true,
-    image: "/placeholder.jpg",
-    description: "16GB RAM, SSD 512GB.",
-    condition: "Usado",
-  },
-  {
-    id: 3,
-    title: "iPhone 13",
-    category: "Celulares",
-    price: 950,
-    verified: true,
-    image: "/placeholder.jpg",
-    description: "Excelente estado.",
-    condition: "Reacondicionado",
-  },
-];
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  condition: string | null;
+  created_at: string;
+  category: { name: string; slug: string } | null;
+  seller: { id: string; full_name: string | null } | null;
+}
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+}
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
+const LIMIT = 20;
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [message, setMessage] = useState("");
+  const { isLoading: authLoading } = useRequireAuth();
 
+  // Filters
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [condition, setCondition] = useState("");
   const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [sort, setSort] = useState("recent");
+  const [page, setPage] = useState(1);
 
+  // Data
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  /* Simulación backend */
+  const [message, setMessage] = useState("");
+
+  // ── Fetch categories once on mount ────────────────────────────────────────
   useEffect(() => {
+    fetch(`${BACKEND_URL}/api/categories`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data: Category[]) => setCategories(data))
+      .catch(() => setCategories([]));
+  }, []);
+
+  // ── Fetch products on filter/page change ──────────────────────────────────
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
-    const t = setTimeout(() => setLoading(false), 700);
-    return () => clearTimeout(t);
-  }, [search, category, condition, priceRange]);
+    setError(null);
 
-  const toggleFavorite = (id: number) => {
-    if (favorites.includes(id)) {
-      setFavorites(favorites.filter((fav) => fav !== id));
-      showMessage("Eliminado de favoritos");
-    } else {
-      setFavorites([...favorites, id]);
-      showMessage("Agregado a favoritos");
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (category) params.set("category", category);
+    if (condition) params.set("condition", condition);
+    if (priceRange[0] > 0) params.set("minPrice", String(priceRange[0]));
+    if (priceRange[1] < 2000) params.set("maxPrice", String(priceRange[1]));
+    params.set("sort", sort);
+    params.set("page", String(page));
+    params.set("limit", String(LIMIT));
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products?${params.toString()}`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      const json = await res.json();
+      setProducts(json.data ?? []);
+      setPagination(json.pagination ?? null);
+    } catch {
+      setError("No se pudieron cargar los productos. Intenta de nuevo.");
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [search, category, condition, priceRange, sort, page]);
 
+  useEffect(() => {
+    if (!authLoading) fetchProducts();
+  }, [authLoading, fetchProducts]);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const showMessage = (text: string) => {
     setMessage(text);
     setTimeout(() => setMessage(""), 2000);
   };
 
-  /* FILTROS */
-  const filteredProducts = PRODUCTS.filter((p) => {
+  const clearFilters = () => {
+    setSearch("");
+    setCategory("");
+    setCondition("");
+    setPriceRange([0, 2000]);
+    setSort("recent");
+    setPage(1);
+    showMessage("Filtros limpiados");
+  };
+
+  // ── Auth loading guard ────────────────────────────────────────────────────
+  if (authLoading) {
     return (
-      p.title.toLowerCase().includes(search.toLowerCase()) &&
-      (category ? p.category === category : true) &&
-      (condition ? p.condition === condition : true) &&
-      p.price >= priceRange[0] &&
-      p.price <= priceRange[1]
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
+        <p style={{ color: "#6b7280", fontSize: "16px" }}>Verificando sesión...</p>
+      </div>
     );
-  });
+  }
+
+  const totalPages = pagination ? Math.ceil(pagination.total / pagination.limit) : 1;
 
   return (
     <div className={styles.container}>
-      {/* Toast accesible */}
+      {/* Toast */}
       {message && (
         <div className={styles.toast} aria-live="polite">
           {message}
@@ -111,18 +145,27 @@ export default function MarketplacePage() {
             <input
               placeholder="Buscar..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className={styles.search}
             />
           </div>
 
-          {/* CATEGORÍA */}
+          {/* CATEGORÍAS (dinámicas) */}
           <div className={styles.filterSection}>
             <p className={styles.filterTitle}>Categoría</p>
             <ul>
-              <li onClick={() => setCategory("Laptops")}>Laptops</li>
-              <li onClick={() => setCategory("Celulares")}>Celulares</li>
-              <li onClick={() => setCategory("Tecnología")}>Tecnología</li>
+              {categories.map((cat) => (
+                <li
+                  key={cat.id}
+                  onClick={() => { setCategory(cat.slug === category ? "" : cat.slug); setPage(1); }}
+                  style={{ fontWeight: cat.slug === category ? 700 : 400, cursor: "pointer" }}
+                >
+                  {cat.name}
+                </li>
+              ))}
+              {categories.length === 0 && (
+                <li style={{ color: "#9ca3af", fontSize: "0.85rem" }}>Cargando...</li>
+              )}
             </ul>
           </div>
 
@@ -130,11 +173,15 @@ export default function MarketplacePage() {
           <div className={styles.filterSection}>
             <p className={styles.filterTitle}>Estado</p>
             <ul>
-              <li onClick={() => setCondition("Nuevo")}>Nuevo</li>
-              <li onClick={() => setCondition("Usado")}>Usado</li>
-              <li onClick={() => setCondition("Reacondicionado")}>
-                Reacondicionado
-              </li>
+              {["Nuevo", "Usado", "Reacondicionado"].map((c) => (
+                <li
+                  key={c}
+                  onClick={() => { setCondition(condition === c ? "" : c); setPage(1); }}
+                  style={{ fontWeight: condition === c ? 700 : 400, cursor: "pointer" }}
+                >
+                  {c}
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -146,90 +193,94 @@ export default function MarketplacePage() {
               min={0}
               max={2000}
               value={priceRange[1]}
-              onChange={(e) =>
-                setPriceRange([0, Number(e.target.value)])
-              }
+              onChange={(e) => { setPriceRange([0, Number(e.target.value)]); setPage(1); }}
             />
             <p>${priceRange[0]} - ${priceRange[1]}</p>
           </div>
 
-          <button
-            className={styles.clearBtn}
-            onClick={() => {
-              setCategory("");
-              setCondition("");
-              setSearch("");
-              setPriceRange([0, 2000]);
-            }}
-          >
+          {/* ORDENAMIENTO */}
+          <div className={styles.filterSection}>
+            <p className={styles.filterTitle}>Ordenar por</p>
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value); setPage(1); }}
+              className={styles.search}
+            >
+              <option value="recent">Más recientes</option>
+              <option value="price_asc">Precio: menor a mayor</option>
+              <option value="price_desc">Precio: mayor a menor</option>
+            </select>
+          </div>
+
+          <button className={styles.clearBtn} onClick={clearFilters}>
             Limpiar filtros
           </button>
         </aside>
 
         {/* GRID */}
         <main className={styles.grid}>
-          {loading ? (
-            <p>Cargando productos...</p>
-          ) : filteredProducts.length === 0 ? (
-            <p>No hay productos.</p>
-          ) : (
-            filteredProducts.map((product) => {
-              const isFavorite = favorites.includes(product.id);
+          {/* Estado de carga / error */}
+          {loading && <p>Cargando productos...</p>}
+          {!loading && error && <p style={{ color: "red" }}>{error}</p>}
 
-              return (
-                <div key={product.id} className={styles.card}>
-                  <div className={styles.imageWrapper}>
-                    <img src={product.image} alt={product.title} />
-                  </div>
+          {!loading && !error && products.length === 0 && (
+            <p>No hay productos que coincidan con los filtros.</p>
+          )}
 
-                  <div className={styles.cardBody}>
-                    <div className={styles.categoryRow}>
-                      <span className={styles.category}>
-                        {product.category}
-                      </span>
+          {!loading && !error && products.map((product) => (
+            <div key={product.id} className={styles.card}>
+              <div className={styles.imageWrapper}>
+                <img src="/placeholder.jpg" alt={product.title} />
+              </div>
 
-                      {product.verified && (
-                        <span className={styles.verified}>
-                          ✔ Verificado
-                        </span>
-                      )}
-                    </div>
-
-                    <h4 className={styles.title}>
-                      {product.title}
-                    </h4>
-
-                    {/* DESCRIPCIÓN + FAVORITO */}
-                    <div className={styles.descriptionRow}>
-                      <p className={styles.description}>
-                        {product.description}
-                      </p>
-
-                      <button
-                        type="button"
-                        aria-label="Agregar a favoritos"
-                        className={`${styles.favoriteBtn} ${
-                          isFavorite ? styles.active : ""
-                        }`}
-                        onClick={() => toggleFavorite(product.id)}
-                      >
-                        <i className="fi fi-bs-heart"></i>
-                      </button>
-                    </div>
-
-                    <p className={styles.price}>${product.price}</p>
-
-                    <button className={styles.contactBtn}>
-                      Contactar vendedor
-                    </button>
-                  </div>
+              <div className={styles.cardBody}>
+                <div className={styles.categoryRow}>
+                  <span className={styles.category}>
+                    {product.category?.name ?? "Sin categoría"}
+                  </span>
                 </div>
-              );
-            })
+
+                <h4 className={styles.title}>{product.title}</h4>
+
+                <div className={styles.descriptionRow}>
+                  <p className={styles.description} style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+                    Vendedor: {product.seller?.full_name ?? "—"}
+                  </p>
+                </div>
+
+                <p className={styles.price}>${product.price.toFixed(2)}</p>
+
+                <button className={styles.contactBtn}>
+                  Ver producto
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Paginación */}
+          {!loading && pagination && totalPages > 1 && (
+            <div style={{ gridColumn: "1 / -1", display: "flex", gap: "8px", marginTop: "16px", justifyContent: "center" }}>
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className={styles.clearBtn}
+              >
+                ← Anterior
+              </button>
+              <span style={{ alignSelf: "center", fontSize: "0.9rem" }}>
+                Página {page} de {totalPages} ({pagination.total} productos)
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className={styles.clearBtn}
+              >
+                Siguiente →
+              </button>
+            </div>
           )}
         </main>
       </div>
     </div>
-
   );
 }
