@@ -1,0 +1,128 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.card {
+  width: 420px;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.backBtn {
+  background: #2563eb;
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.step {
+  color: #2563eb;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.title {
+  font-weight: 600;
+}
+
+/* DROP ZONE */
+.dropZone {
+  background: #e5e7eb;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+/* 🔥 ICONO PNG CONTROLADO */
+.icon {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+/* PREVIEW */
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.preview {
+  position: relative;
+}
+
+.preview img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.preview button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: black;
+  color: white;
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* BUTTON */
+.nextBtn {
+  width: 100%;
+  background: #2563eb;
+  border: none;
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nextBtn:hover {
+  background: #1e40af;
+}
+/* TEXTAREA DESCRIPCIÓN */
+.textarea {
+  width: 100%;
+  min-height: 90px; /* 🔥 antes 120px */
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  resize: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border: 1px solid #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px; /* 🔥 más compacto */
+}
