@@ -1,4 +1,32 @@
 /* =========================
+   PAGE ANIMATIONS
+========================= */
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes slideInRight {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+/* =========================
    CONTENEDOR GENERAL
 ========================= */
 
@@ -28,6 +56,8 @@
 .heroContent {
   max-width: 600px;
   flex: 1;
+  animation: slideInRight 0.5s ease-out;
+  will-change: opacity, transform;
 }
 
 .heroContent h1 {
@@ -67,8 +97,17 @@
 
 .heroImage {
   background-image: url("/hero.png");
+  animation: slideInRight 0.5s ease-out 0.1s both;
+  will-change: opacity, transform;
 }
 
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .heroContent,
+  .heroImage {
+    animation: none;
+  }
+}
 
 /* =========================
    CATEGORÍAS DESTACADAS
@@ -263,5 +302,29 @@
 @media (max-width: 768px) {
   .footerContent {
     flex-direction: column;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes slideInRight {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 }

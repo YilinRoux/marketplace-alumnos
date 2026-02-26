@@ -36,12 +36,43 @@ body {
 }
 
 /* =========================
+   PAGE TRANSITIONS
+========================= */
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes fadeInPage {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* =========================
    LAYOUT
 ========================= */
 main {
   width: 100%;
   margin: 0;
   padding: 0;
+  animation: fadeInPage 0.4s ease-out;
+  will-change: opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main {
+    animation: none;
+  }
 }
 
 .centered {
@@ -96,12 +127,21 @@ nav a:hover {
 ========================= */
 .breadcrumbs {
   font-size: 0.875rem;
+  padding: 16px 32px;
+  margin: 0;
   margin-bottom: 1rem;
   color: #6b7280;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .breadcrumbs a {
   color: #2563eb;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
 }
 
 /* =========================
@@ -289,3 +329,90 @@ button:hover {
   z-index: 9999;
   font-size: 1rem;
 }
+
+/* =========================
+   TOAST NOTIFICATIONS
+========================= */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  z-index: 9999;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+/* Toast colors */
+.toast-success {
+  background: #16a34a;
+  color: white;
+}
+
+.toast-error {
+  background: #dc2626;
+  color: white;
+}
+
+.toast-info {
+  background: #2563eb;
+  color: white;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Respect prefers-reduced-motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* =========================
+   PAGE TRANSITIONS
+========================= */
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+main {
+  animation: fadeInPage 0.4s ease-out;
+  will-change: opacity;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  main {
+    animation: none;
+    opacity: 1;
+  }
+}
+

@@ -105,7 +105,7 @@ export default function Navbar() {
 
                 <hr className={styles.divider} />
 
-                <button onClick={handleLogout} className={styles.logout}>
+                <button onClick={handleLogout} className={styles.logout} role="menuitem">
                   Cerrar sesión
                 </button>
               </div>

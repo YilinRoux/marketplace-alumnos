@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useToast } from "./ToastProvider";
+import styles from "./FocusManager.module.css";
 
 export default function FocusManager({
   children,
@@ -10,18 +12,22 @@ export default function FocusManager({
 }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const { showToast } = useToast();
 
   useEffect(() => {
     mainRef.current?.focus();
-  }, [pathname]);
+    // Mostrar toast de página cargada
+    showToast(`Página cargada`, "success");
+  }, [pathname, showToast]);
 
   return (
     <div
       ref={mainRef}
       tabIndex={-1}
-      style={{ outline: "none" }}
+      className={styles.focusContainer}
     >
       {children}
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 type ToastType = "success" | "error" | "info";
 
@@ -13,12 +13,12 @@ const ToastContext = createContext<ToastContextType | null>(null);
 export function ToastProvider({ children }: any) {
   const [toast, setToast] = useState({ message: "", type: "info" });
 
-  const showToast = (message: string, type: ToastType = "info") => {
+  const showToast = useCallback((message: string, type: ToastType = "info") => {
     setToast({ message, type });
     setTimeout(() => {
       setToast({ message: "", type: "info" });
     }, 2500);
-  };
+  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
@@ -28,23 +28,7 @@ export function ToastProvider({ children }: any) {
         <div
           role="alert"
           aria-live="assertive"
-          style={{
-            position: "fixed",
-            top: "90px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background:
-              toast.type === "error"
-                ? "#dc2626"
-                : toast.type === "success"
-                ? "#16a34a"
-                : "#2563eb",
-            color: "white",
-            padding: "14px 30px",
-            borderRadius: "50px",
-            fontWeight: 600,
-            zIndex: 9999,
-          }}
+          className={`toast toast-${toast.type}`}
         >
           {toast.message}
         </div>
