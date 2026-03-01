@@ -136,8 +136,6 @@ app.post("/auth/set-session", async (req: Request, res: Response) => {
  *         description: No autenticado
  */
 app.get("/auth/me", requireAuth, (req: Request, res: Response) => {
-  // requireAuth ya validó el token, hizo refresh si fue necesario,
-  // y cargó el perfil completo desde public.profiles en req.user
   res.json({ user: req.user });
 });
 
@@ -169,11 +167,75 @@ app.post("/auth/logout", async (req: Request, res: Response) => {
     res.clearCookie("refresh_token", { path: "/" });
     res.json({ ok: true });
   } catch (err) {
-    // Aunque falle la invalidación en Supabase, siempre limpiamos las cookies
     logger.error({ err }, "Error en /auth/logout (cookies limpiadas de todas formas)");
     res.clearCookie("access_token", { path: "/" });
     res.clearCookie("refresh_token", { path: "/" });
     res.json({ ok: true });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Envía email de recuperación de contraseña
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: usuario@example.com
+ *     responses:
+ *       200:
+ *         description: Email enviado (siempre responde OK por seguridad)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Si el email existe, recibirás un enlace de recuperación
+ *       400:
+ *         description: Email requerido
+ *       500:
+ *         description: Error interno del servidor
+ */
+app.post("/auth/forgot-password", async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ error: "El email es requerido" });
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
+    });
+
+    if (error) {
+      logger.warn({ error }, "Error en forgot-password");
+    }
+
+    // Siempre responder OK aunque el email no exista (seguridad — no revelar si existe)
+    logger.info({ email }, "Solicitud de recuperación de contraseña");
+    res.json({ ok: true, message: "Si el email existe, recibirás un enlace de recuperación" });
+  } catch (err) {
+    logger.error({ err }, "Error en /auth/forgot-password");
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 
@@ -279,11 +341,9 @@ app.use((err: Error, _: Request, res: Response, __: NextFunction) => {
   });
 });
 
-
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   logger.info(`Backend corriendo en el puerto ${PORT}`);
   logger.info(`Swagger UI disponible en http://localhost:${PORT}/api-docs`);
 });
-
