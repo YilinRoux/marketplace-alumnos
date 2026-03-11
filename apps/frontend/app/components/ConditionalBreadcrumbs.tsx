@@ -4,12 +4,11 @@ import { usePathname } from "next/navigation";
 import Breadcrumbs from "./Breadcrumbs";
 
 export default function ConditionalBreadcrumbs() {
-const pathname = usePathname();
+  const pathname = usePathname();
 
+  const hiddenRoutes = ["/", "/auth/login", "/auth/register"];
 
-const hiddenRoutes = ["/marketplace", "/auth/login", "/auth/register"];
+  if (hiddenRoutes.includes(pathname)) return null;
 
-if (hiddenRoutes.includes(pathname)) return null;
-
-return <Breadcrumbs />;
+  return <Breadcrumbs />;
 }

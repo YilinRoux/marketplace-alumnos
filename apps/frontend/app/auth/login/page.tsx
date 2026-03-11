@@ -1,162 +1,98 @@
 "use client";
 
 export const dynamic = "force-dynamic";
- 
 
-import React from "react";
-import { useRef, useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
-import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/AuthContext";
 import styles from "./login.module.css";
 
-/**
- * Inicializa y renderiza el botón de Google Sign-In.
- * Extirpamos esta lógica a una función reutilizable porque necesitamos
- * llamarla tanto en onLoad (primera visita) como en useEffect (visitas
- * subsecuentes via client-side navigation donde el script ya está en memoria).
- */
-async function initGoogleButton(
-  callbackRef: React.MutableRefObject<(r: { credential: string }) => void>,
-  nonceRef: React.MutableRefObject<{ raw: string; hashed: string }>
-) {
-  const google = (window as unknown as { google?: { accounts: { id: { initialize: (c: object) => void; renderButton: (el: HTMLElement, opts: object) => void } } } }).google;
-  if (!google?.accounts?.id) return;
+const GoogleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 48 48">
+    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.954 4 4 12.954 4 24s8.954 20 20 20s20-8.954 20-20c0-1.334-.112-2.643-.389-3.917z"/>
+    <path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/>
+    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.334-.112-2.643-.389-3.917z"/>
+  </svg>
+);
 
-  const raw = crypto.randomUUID();
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(raw)
-  );
-  const hashed = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  nonceRef.current = { raw, hashed };
+// Usuario simulado — mismo esquema que UserProfile en AuthContext
+const DEMO_USER = {
+  id: "demo-user-001",
+  email: "usuario@universidad.edu",
+  name: "Usuario Demo",
+  avatar: null,
+  role: "user" as const,
+  phone: null,
+};
 
-  google.accounts.id.initialize({
-    client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    callback: (r: { credential: string }) => callbackRef.current(r),
-    nonce: hashed,
-  });
-
-  const container = document.getElementById("google-btn");
-  if (container) {
-    // Limpiar contenido previo antes de re-renderizar (evita duplicados)
-    container.innerHTML = "";
-    google.accounts.id.renderButton(container, {
-      type: "standard",
-      theme: "outline",
-      size: "large",
-      text: "signin_with",
-      locale: "es",
-      width: 380,
-    });
-  }
-}
+const SESSION_KEY = "um_user_cache";
 
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const nonceRef = useRef({ raw: "", hashed: "" });
-  const callbackRef = useRef<(r: { credential: string }) => void>(() => { });
 
-  // FIX Bug 2: Si el script GSI ya está en memoria (navegación client-side post-logout),
-  // onLoad no se vuelve a disparar. Lo inicializamos en useEffect como fallback.
-  useEffect(() => {
-    const google = (window as unknown as { google?: object }).google;
-    if (google) {
-      // El script ya estaba cargado — renderizar el botón directamente
-      initGoogleButton(callbackRef, nonceRef);
-    }
-    // Si google no está en window aún, onLoad del <Script> se encargará
-  }, []); // Solo al montar
-
-  callbackRef.current = async (response) => {
+  const handleDemoLogin = async () => {
     setLoading(true);
-    setError(null);
+
+    await new Promise((r) => setTimeout(r, 1500));
 
     try {
-      const { data, error: authError } =
-        await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: response.credential,
-          nonce: nonceRef.current.raw,
-        });
-
-      if (authError || !data.session) {
-        throw new Error(authError?.message || "No se pudo iniciar sesión");
-      }
-
-      const backendUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
-      const res = await fetch(`${backendUrl}/auth/set-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Error al establecer sesión en el servidor");
-
-      // FIX Bug 1: Notificar al AuthContext del nuevo login ANTES de navegar.
-      // Esto resetea status a 'loading' → AuthContext verifica /auth/me
-      // → status: 'authenticated'. Evita que useRequireAuth rediriga de vuelta.
-      await refresh();
-
-      router.push("/marketplace");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-      setLoading(false);
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(DEMO_USER));
+    } catch {
     }
-  };
 
-  const handleGoogleScriptLoad = () => {
-    initGoogleButton(callbackRef, nonceRef);
+    await refresh();
+
+    router.push("/marketplace");
   };
 
   return (
-    <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        onLoad={handleGoogleScriptLoad}
-        strategy="afterInteractive"
-      />
-      <main className={styles.container}>
-        <div className={styles.leftSide}>
-          <div className={styles.card}>
-            <div className={styles.titleBlock}>
-              <h1 className={styles.title}>
-                UNI<span className={styles.titleAccent}>MARKET</span>
-              </h1>
-            </div>
+    <main className={styles.container}>
+      <div className={styles.leftSide}>
+        <div className={styles.card}>
 
-            <div className={styles.subtitleBlock}>
-              <h2 className={styles.subtitle}>Bienvenido</h2>
-              <p className={styles.description}>
-                Inicia sesión o regístrate para acceder a tu cuenta
-              </p>
-            </div>
-
-            <div id="google-btn" className={styles.googleBtn} />
-
-            {loading && (
-              <p className={styles.loadingText}>Procesando...</p>
-            )}
-
-            {error && (
-              <p className={styles.errorText}>{error}</p>
-            )}
+          <div className={styles.titleBlock}>
+            <h1 className={styles.title}>
+              UNI<span className={styles.titleAccent}>MARKET</span>
+            </h1>
           </div>
-        </div>
 
-        <div className={styles.rightSide} />
-      </main>
-    </>
+          <div className={styles.subtitleBlock}>
+            <h2 className={styles.subtitle}>Bienvenido</h2>
+            <p className={styles.description}>
+              Inicia sesión o regístrate para acceder a tu cuenta
+            </p>
+          </div>
+
+          {/* Botón Google real (deshabilitado sin credenciales) */}
+          <button className={styles.btnGoogle} disabled>
+            <GoogleIcon />
+            Acceder con Google
+          </button>
+
+          <div className={styles.separator}>
+            <span>o</span>
+          </div>
+
+          
+          <button
+            className={styles.btnDemo}
+            onClick={handleDemoLogin}
+            disabled={loading}
+          >
+            {loading ? "Iniciando sesión..." : " Entrar como usuario"}
+          </button>
+
+          <p className={styles.demoNote}>
+            Solo para pruebas — no requiere backend
+          </p>
+
+        </div>
+      </div>
+
+      <div className={styles.rightSide} />
+    </main>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import styles from "./marketplace.module.css";
-import { useRequireAuth } from "../hooks/useRequireAuth";
+import ProductCard from "../components/ProductCard/ProductCard";
+import SkeletonCard from "../components/SkeletonCard/SkeletonCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,7 +13,18 @@ interface Category {
   slug: string;
 }
 
-interface Product {
+export interface DemoProduct {
+  id: string;
+  categoria: string;
+  titulo: string;
+  descripcion: string;
+  precio: string;
+  estaVerificado: boolean;
+  imagen: string;
+  vendedorEmail: string;
+}
+
+interface BackendProduct {
   id: string;
   title: string;
   price: number;
@@ -30,30 +42,42 @@ interface Pagination {
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
 const LIMIT = 20;
+const DEMO_PRODUCTS_KEY = "um_demo_products";
+
+function loadDemoProducts(): DemoProduct[] {
+  try {
+    const raw = sessionStorage.getItem(DEMO_PRODUCTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
-  const { isLoading: authLoading } = useRequireAuth();
-
-  // Filters
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [condition, setCondition] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [precioMaximo, setPrecioMaximo] = useState(2000);
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
 
-  // Data
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<BackendProduct[]>([]);
+  const [demoProducts, setDemoProducts] = useState<DemoProduct[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [message, setMessage] = useState("");
+  // Cargar productos demo de sessionStorage
+  useEffect(() => {
+    setDemoProducts(loadDemoProducts());
 
-  // ── Fetch categories once on mount ────────────────────────────────────────
+    // Escuchar cambios (cuando se publica un producto nuevo)
+    const handleStorage = () => setDemoProducts(loadDemoProducts());
+    window.addEventListener("demo-products-updated", handleStorage);
+    return () => window.removeEventListener("demo-products-updated", handleStorage);
+  }, []);
+
+  // Fetch categorías del backend
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/categories`, { credentials: "include" })
       .then((r) => r.json())
@@ -61,222 +85,146 @@ export default function MarketplacePage() {
       .catch(() => setCategories([]));
   }, []);
 
-  // ── Fetch products on filter/page change ──────────────────────────────────
+  // Fetch productos del backend
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     const params = new URLSearchParams();
     if (search.trim()) params.set("search", search.trim());
     if (category) params.set("category", category);
-    if (condition) params.set("condition", condition);
-    if (priceRange[0] > 0) params.set("minPrice", String(priceRange[0]));
-    if (priceRange[1] < 2000) params.set("maxPrice", String(priceRange[1]));
+    if (precioMaximo < 2000) params.set("maxPrice", String(precioMaximo));
     params.set("sort", sort);
     params.set("page", String(page));
     params.set("limit", String(LIMIT));
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/products?${params.toString()}`, {
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-
+      const res = await fetch(`${BACKEND_URL}/api/products?${params.toString()}`, { credentials: "include" });
+      if (!res.ok) throw new Error();
       const json = await res.json();
       setProducts(json.data ?? []);
       setPagination(json.pagination ?? null);
     } catch {
-      setError("No se pudieron cargar los productos. Intenta de nuevo.");
+      setError(null); // No mostrar error — simplemente mostrar solo demos
       setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, [search, category, condition, priceRange, sort, page]);
+  }, [search, category, precioMaximo, sort, page]);
 
-  useEffect(() => {
-    if (!authLoading) fetchProducts();
-  }, [authLoading, fetchProducts]);
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(""), 2000);
+  const limpiarFiltros = () => {
+    setSearch(""); setCategory(""); setPrecioMaximo(2000); setSort("recent"); setPage(1);
   };
 
-  const clearFilters = () => {
-    setSearch("");
-    setCategory("");
-    setCondition("");
-    setPriceRange([0, 2000]);
-    setSort("recent");
-    setPage(1);
-    showMessage("Filtros limpiados");
-  };
-
-  // ── Auth loading guard ────────────────────────────────────────────────────
-  if (authLoading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
-        <p style={{ color: "#6b7280", fontSize: "16px" }}>Verificando sesión...</p>
-      </div>
-    );
-  }
+  // Filtrar demos por búsqueda y categoría
+  const filteredDemos = demoProducts.filter((p) => {
+    const matchSearch = !search || p.titulo.toLowerCase().includes(search.toLowerCase());
+    const matchCat = !category || p.categoria.toLowerCase() === category.toLowerCase();
+    const matchPrice = !precioMaximo || Number(p.precio) <= precioMaximo;
+    return matchSearch && matchCat && matchPrice;
+  });
 
   const totalPages = pagination ? Math.ceil(pagination.total / pagination.limit) : 1;
 
   return (
-    <div className={styles.container}>
-      {/* Toast */}
-      {message && (
-        <div className={styles.toast} aria-live="polite">
-          {message}
-        </div>
-      )}
+    <div className={styles.storeContainer}>
+      <div className={styles.breadcrumbs}>
+        Inicio {">"} <span>Explorar Tienda</span>
+      </div>
 
-      <div className={styles.content}>
+      <div className={styles.mainLayout}>
         {/* SIDEBAR */}
         <aside className={styles.sidebar}>
-          <h3 className={styles.sidebarTitle}>Filtros</h3>
+          <h2>Filtros</h2>
 
-          {/* BUSCADOR */}
           <div className={styles.filterSection}>
-            <p className={styles.filterTitle}>Buscar</p>
+            <h3>Buscar</h3>
             <input
-              placeholder="Buscar..."
+              type="text"
+              placeholder="Buscar productos..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className={styles.search}
+              className={styles.searchInput}
             />
           </div>
 
-          {/* CATEGORÍAS (dinámicas) */}
           <div className={styles.filterSection}>
-            <p className={styles.filterTitle}>Categoría</p>
-            <ul>
-              {categories.map((cat) => (
-                <li
-                  key={cat.id}
-                  onClick={() => { setCategory(cat.slug === category ? "" : cat.slug); setPage(1); }}
-                  style={{ fontWeight: cat.slug === category ? 700 : 400, cursor: "pointer" }}
-                >
-                  {cat.name}
-                </li>
-              ))}
-              {categories.length === 0 && (
-                <li style={{ color: "#9ca3af", fontSize: "0.85rem" }}>Cargando...</li>
-              )}
-            </ul>
+            <h3>Categoría</h3>
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                className={`${styles.filterRow} ${cat.slug === category ? styles.activeFilter : ""}`}
+                onClick={() => { setCategory(cat.slug === category ? "" : cat.slug); setPage(1); }}
+              >
+                <span>{cat.name}</span>
+              </div>
+            ))}
+            {categories.length === 0 && <p style={{ fontSize: "0.85rem", color: "#9ca3af" }}>Sin categorías</p>}
           </div>
 
-          {/* ESTADO */}
           <div className={styles.filterSection}>
-            <p className={styles.filterTitle}>Estado</p>
-            <ul>
-              {["Nuevo", "Usado", "Reacondicionado"].map((c) => (
-                <li
-                  key={c}
-                  onClick={() => { setCondition(condition === c ? "" : c); setPage(1); }}
-                  style={{ fontWeight: condition === c ? 700 : 400, cursor: "pointer" }}
-                >
-                  {c}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* PRECIO */}
-          <div className={styles.filterSection}>
-            <p className={styles.filterTitle}>Precio</p>
-            <input
-              type="range"
-              min={0}
-              max={2000}
-              value={priceRange[1]}
-              onChange={(e) => { setPriceRange([0, Number(e.target.value)]); setPage(1); }}
+            <h3>Precio: Hasta ${precioMaximo}</h3>
+            <input type="range" min={0} max={2000} value={precioMaximo}
+              onChange={(e) => { setPrecioMaximo(Number(e.target.value)); setPage(1); }}
+              style={{ width: "100%", cursor: "pointer" }}
             />
-            <p>${priceRange[0]} - ${priceRange[1]}</p>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748B", marginTop: "5px" }}>
+              <span>$0</span><span>$2000</span>
+            </div>
           </div>
 
-          {/* ORDENAMIENTO */}
           <div className={styles.filterSection}>
-            <p className={styles.filterTitle}>Ordenar por</p>
-            <select
-              value={sort}
-              onChange={(e) => { setSort(e.target.value); setPage(1); }}
-              className={styles.search}
-            >
+            <h3>Ordenar por</h3>
+            <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className={styles.searchInput}>
               <option value="recent">Más recientes</option>
               <option value="price_asc">Precio: menor a mayor</option>
               <option value="price_desc">Precio: mayor a menor</option>
             </select>
           </div>
 
-          <button className={styles.clearBtn} onClick={clearFilters}>
-            Limpiar filtros
-          </button>
+          <button className={styles.btnClearFilters} onClick={limpiarFiltros}>Limpiar Filtros</button>
         </aside>
 
         {/* GRID */}
-        <main className={styles.grid}>
-          {/* Estado de carga / error */}
-          {loading && <p>Cargando productos...</p>}
-          {!loading && error && <p style={{ color: "red" }}>{error}</p>}
+        <main className={styles.productGrid}>
+          {loading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
 
-          {!loading && !error && products.length === 0 && (
-            <p>No hay productos que coincidan con los filtros.</p>
-          )}
-
-          {!loading && !error && products.map((product) => (
-            <div key={product.id} className={styles.card}>
-              <div className={styles.imageWrapper}>
-                <img src="/placeholder.jpg" alt={product.title} />
-              </div>
-
-              <div className={styles.cardBody}>
-                <div className={styles.categoryRow}>
-                  <span className={styles.category}>
-                    {product.category?.name ?? "Sin categoría"}
-                  </span>
-                </div>
-
-                <h4 className={styles.title}>{product.title}</h4>
-
-                <div className={styles.descriptionRow}>
-                  <p className={styles.description} style={{ fontSize: "0.8rem", color: "#6b7280" }}>
-                    Vendedor: {product.seller?.full_name ?? "—"}
-                  </p>
-                </div>
-
-                <p className={styles.price}>${product.price.toFixed(2)}</p>
-
-                <button className={styles.contactBtn}>
-                  Ver producto
-                </button>
-              </div>
-            </div>
+          {/* Productos demo (sessionStorage) — siempre al inicio */}
+          {!loading && filteredDemos.map((p) => (
+            <ProductCard
+              key={p.id}
+              categoria={p.categoria}
+              titulo={p.titulo}
+              descripcion={p.descripcion}
+              estaVerificado={p.estaVerificado}
+              imagen={p.imagen}
+            />
           ))}
 
-          {/* Paginación */}
+          {/* Productos del backend */}
+          {!loading && products.map((p) => (
+            <ProductCard
+              key={p.id}
+              categoria={p.category?.name ?? "Sin categoría"}
+              titulo={p.title}
+              descripcion={`$${p.price.toFixed(2)} · ${p.seller?.full_name ?? "—"}`}
+              estaVerificado={true}
+              imagen={undefined}
+            />
+          ))}
+
+          {!loading && filteredDemos.length === 0 && products.length === 0 && (
+            <p style={{ color: "#6b7280", gridColumn: "1 / -1" }}>
+              No hay productos que coincidan con los filtros.
+            </p>
+          )}
+
           {!loading && pagination && totalPages > 1 && (
-            <div style={{ gridColumn: "1 / -1", display: "flex", gap: "8px", marginTop: "16px", justifyContent: "center" }}>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className={styles.clearBtn}
-              >
-                ← Anterior
-              </button>
-              <span style={{ alignSelf: "center", fontSize: "0.9rem" }}>
-                Página {page} de {totalPages} ({pagination.total} productos)
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className={styles.clearBtn}
-              >
-                Siguiente →
-              </button>
+            <div className={styles.pagination}>
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className={styles.btnClearFilters}>← Anterior</button>
+              <span>Página {page} de {totalPages}</span>
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className={styles.btnClearFilters}>Siguiente →</button>
             </div>
           )}
         </main>
