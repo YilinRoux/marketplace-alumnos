@@ -1,162 +1,342 @@
 "use client";
 
 export const dynamic = "force-dynamic";
- 
 
-import React from "react";
-import { useRef, useState, useEffect } from "react";
+import React, { useState, useId } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
-import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/AuthContext";
 import styles from "./login.module.css";
 
-/**
- * Inicializa y renderiza el botón de Google Sign-In.
- * Extirpamos esta lógica a una función reutilizable porque necesitamos
- * llamarla tanto en onLoad (primera visita) como en useEffect (visitas
- * subsecuentes via client-side navigation donde el script ya está en memoria).
- */
-async function initGoogleButton(
-  callbackRef: React.MutableRefObject<(r: { credential: string }) => void>,
-  nonceRef: React.MutableRefObject<{ raw: string; hashed: string }>
-) {
-  const google = (window as unknown as { google?: { accounts: { id: { initialize: (c: object) => void; renderButton: (el: HTMLElement, opts: object) => void } } } }).google;
-  if (!google?.accounts?.id) return;
+// ── Ícono Google ──────────────────────────────────────────────────────────────
+const GoogleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.954 4 4 12.954 4 24s8.954 20 20 20s20-8.954 20-20c0-1.334-.112-2.643-.389-3.917z"/>
+    <path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/>
+    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.334-.112-2.643-.389-3.917z"/>
+  </svg>
+);
 
-  const raw = crypto.randomUUID();
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(raw)
-  );
-  const hashed = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  nonceRef.current = { raw, hashed };
+// ── Íconos ojo ────────────────────────────────────────────────────────────────
+const EyeOpen = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+    viewBox="0 0 24 24" stroke="#6b7280" strokeWidth="2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
 
-  google.accounts.id.initialize({
-    client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    callback: (r: { credential: string }) => callbackRef.current(r),
-    nonce: hashed,
-  });
+const EyeClosed = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+    viewBox="0 0 24 24" stroke="#6b7280" strokeWidth="2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+  </svg>
+);
 
-  const container = document.getElementById("google-btn");
-  if (container) {
-    // Limpiar contenido previo antes de re-renderizar (evita duplicados)
-    container.innerHTML = "";
-    google.accounts.id.renderButton(container, {
-      type: "standard",
-      theme: "outline",
-      size: "large",
-      text: "signin_with",
-      locale: "es",
-      width: 380,
-    });
-  }
+// ── Usuario simulado ──────────────────────────────────────────────────────────
+const DEMO_USER = {
+  id: "demo-user-001",
+  email: "usuario@universidad.edu",
+  name: "Usuario Demo",
+  avatar: null,
+  role: "user" as const,
+  phone: null,
+};
+
+const SESSION_KEY = "um_user_cache";
+
+// ── Validaciones ──────────────────────────────────────────────────────────────
+function validateEmail(value: string): string {
+  if (!value.trim()) return "El correo es obligatorio.";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(value)) return "Ingresa un correo electrónico válido.";
+  return "";
 }
 
+function getPasswordStrength(value: string) {
+  const checks = {
+    length: value.length >= 8,
+    upper:  /[A-Z]/.test(value),
+    number: /[0-9]/.test(value),
+    symbol: /[^A-Za-z0-9]/.test(value),
+  };
+  const score = Object.values(checks).filter(Boolean).length;
+  const level =
+    score <= 1 ? "debil" :
+    score <= 3 ? "media" :
+    "fuerte";
+  const percent = score === 0 ? 0 : score === 1 ? 25 : score === 2 ? 50 : score === 3 ? 75 : 100;
+  return { level, percent, checks };
+}
+
+function validatePassword(value: string): string {
+  if (!value) return "La contraseña es obligatoria.";
+  if (value.length < 8) return "Mínimo 8 caracteres.";
+  const { level } = getPasswordStrength(value);
+  if (level === "debil") return "La contraseña es muy débil.";
+  return "";
+}
+
+// ── Componente principal ──────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const nonceRef = useRef({ raw: "", hashed: "" });
-  const callbackRef = useRef<(r: { credential: string }) => void>(() => { });
 
-  // FIX Bug 2: Si el script GSI ya está en memoria (navegación client-side post-logout),
-  // onLoad no se vuelve a disparar. Lo inicializamos en useEffect como fallback.
-  useEffect(() => {
-    const google = (window as unknown as { google?: object }).google;
-    if (google) {
-      // El script ya estaba cargado — renderizar el botón directamente
-      initGoogleButton(callbackRef, nonceRef);
-    }
-    // Si google no está en window aún, onLoad del <Script> se encargará
-  }, []); // Solo al montar
+  // IDs accesibles únicos
+  const emailId         = useId();
+  const passwordId      = useId();
+  const emailErrorId    = useId();
+  const passwordErrorId = useId();
+  const authErrorId     = useId();
 
-  callbackRef.current = async (response) => {
+  // Estados
+  const [email,            setEmail]            = useState("");
+  const [password,         setPassword]         = useState("");
+  const [emailError,       setEmailError]       = useState("");
+  const [passwordError,    setPasswordError]    = useState("");
+  const [authError,        setAuthError]        = useState("");
+  const [loading,          setLoading]          = useState(false);
+  const [touched,          setTouched]          = useState({ email: false, password: false });
+  const [showPassword,     setShowPassword]     = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(getPasswordStrength(""));
+
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+  const handleBlurEmail = () => {
+    setTouched((t) => ({ ...t, email: true }));
+    setEmailError(validateEmail(email));
+  };
+
+  const handleBlurPassword = () => {
+    setTouched((t) => ({ ...t, password: true }));
+    setPasswordError(validatePassword(password));
+  };
+
+  const handleFormLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const eErr = validateEmail(email);
+    const pErr = validatePassword(password);
+    setEmailError(eErr);
+    setPasswordError(pErr);
+    setTouched({ email: true, password: true });
+
+    if (eErr || pErr) return;
+
+    setAuthError("");
     setLoading(true);
-    setError(null);
+
+    await new Promise((r) => setTimeout(r, 1500));
+
+    const isValid = email === DEMO_USER.email && password.length >= 8;
+
+    if (!isValid) {
+      setAuthError("Usuario o contraseña incorrectos.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const { data, error: authError } =
-        await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: response.credential,
-          nonce: nonceRef.current.raw,
-        });
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(DEMO_USER));
+    } catch {}
 
-      if (authError || !data.session) {
-        throw new Error(authError?.message || "No se pudo iniciar sesión");
-      }
+    await refresh();
 
-      const backendUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
-      const res = await fetch(`${backendUrl}/auth/set-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        }),
-      });
+    const role: string = DEMO_USER.role;
+    if (role === "admin")       router.push("/admin");
+    else if (role === "seller") router.push("/seller");
+    else                        router.push("/marketplace");
+  };
 
-      if (!res.ok) throw new Error("Error al establecer sesión en el servidor");
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setAuthError("");
 
-      // FIX Bug 1: Notificar al AuthContext del nuevo login ANTES de navegar.
-      // Esto resetea status a 'loading' → AuthContext verifica /auth/me
-      // → status: 'authenticated'. Evita que useRequireAuth rediriga de vuelta.
-      await refresh();
+    await new Promise((r) => setTimeout(r, 1500));
 
-      router.push("/marketplace");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(DEMO_USER));
+    } catch {
+      setAuthError("No se pudo iniciar sesión. Por favor, intenta en un navegador compatible.");
       setLoading(false);
+      return;
     }
+
+    await refresh();
+
+    router.push("/marketplace");
   };
 
-  const handleGoogleScriptLoad = () => {
-    initGoogleButton(callbackRef, nonceRef);
-  };
-
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        onLoad={handleGoogleScriptLoad}
-        strategy="afterInteractive"
-      />
-      <main className={styles.container}>
-        <div className={styles.leftSide}>
-          <div className={styles.card}>
-            <div className={styles.titleBlock}>
-              <h1 className={styles.title}>
-                UNI<span className={styles.titleAccent}>MARKET</span>
-              </h1>
-            </div>
+    <main className={styles.container}>
+      <div className={styles.leftSide}>
+        <div className={styles.card}>
 
-            <div className={styles.subtitleBlock}>
-              <h2 className={styles.subtitle}>Bienvenido</h2>
-              <p className={styles.description}>
-                Inicia sesión o regístrate para acceder a tu cuenta
-              </p>
-            </div>
-
-            <div id="google-btn" className={styles.googleBtn} />
-
-            {loading && (
-              <p className={styles.loadingText}>Procesando...</p>
-            )}
-
-            {error && (
-              <p className={styles.errorText}>{error}</p>
-            )}
+          {/* Título */}
+          <div className={styles.titleBlock}>
+            <h1 className={styles.title}>
+              UNI<span className={styles.titleAccent}>MARKET</span>
+            </h1>
           </div>
-        </div>
 
-        <div className={styles.rightSide} />
-      </main>
-    </>
+          {/* Subtítulo */}
+          <div className={styles.subtitleBlock}>
+            <h2 className={styles.subtitle}>Bienvenido</h2>
+            <p className={styles.description}>
+              Inicia sesión o regístrate para acceder a tu cuenta
+            </p>
+          </div>
+
+          {/* Botón Google deshabilitado */}
+          <button className={styles.btnGoogle} disabled aria-disabled="true">
+            <GoogleIcon />
+            Acceder con Google
+          </button>
+
+          <div className={styles.separator} aria-hidden="true"><span>o</span></div>
+
+          {/* ── Formulario ─────────────────────────────────────────────────────── */}
+          <form onSubmit={handleFormLogin} noValidate aria-label="Formulario de inicio de sesión">
+
+            {/* Error de autenticación */}
+            {authError && (
+              <div id={authErrorId} role="alert" aria-live="assertive" className={styles.authError}>
+                {authError}
+              </div>
+            )}
+
+            {/* Campo email */}
+            <div className={styles.fieldGroup}>
+              <label htmlFor={emailId} className={styles.label}>
+                Correo electrónico
+              </label>
+              <input
+                id={emailId}
+                type="email"
+                autoComplete="email"
+                className={styles.input}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (touched.email) setEmailError(validateEmail(e.target.value));
+                }}
+                onBlur={handleBlurEmail}
+                aria-required="true"
+                aria-invalid={touched.email && !!emailError ? "true" : "false"}
+                aria-describedby={touched.email && emailError ? emailErrorId : undefined}
+                disabled={loading}
+                placeholder="correo@universidad.edu"
+              />
+              {touched.email && emailError && (
+                <span id={emailErrorId} role="alert" aria-live="polite" className={styles.fieldError}>
+                  {emailError}
+                </span>
+              )}
+            </div>
+
+            {/* Campo contraseña */}
+            <div className={styles.fieldGroup}>
+              <label htmlFor={passwordId} className={styles.label}>
+                Contraseña
+              </label>
+
+              {/* Input + ojo */}
+              <div className={styles.passwordWrapper}>
+                <input
+                  id={passwordId}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className={styles.input}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordStrength(getPasswordStrength(e.target.value));
+                    if (touched.password) setPasswordError(validatePassword(e.target.value));
+                  }}
+                  onBlur={handleBlurPassword}
+                  aria-required="true"
+                  aria-invalid={touched.password && !!passwordError ? "true" : "false"}
+                  aria-describedby={touched.password && passwordError ? passwordErrorId : undefined}
+                  disabled={loading}
+                  placeholder="Mínimo 8 caracteres"
+                />
+                
+              </div>
+
+              {/* Checklist de requisitos — desaparece cuando todos se cumplen */}
+              {password && passwordStrength.level !== "fuerte" && (
+                <ul className={styles.checkList} aria-label="Requisitos de contraseña">
+                  {!passwordStrength.checks.length && (
+                    <li className={styles.checkPending}>○ Mínimo 8 caracteres</li>
+                  )}
+                  {!passwordStrength.checks.upper && (
+                    <li className={styles.checkPending}>○ Al menos una mayúscula (A-Z)</li>
+                  )}
+                  {!passwordStrength.checks.number && (
+                    <li className={styles.checkPending}>○ Al menos un número (0-9)</li>
+                  )}
+                  {!passwordStrength.checks.symbol && (
+                    <li className={styles.checkPending}>○ Al menos un símbolo (!@#$%...)</li>
+                  )}
+                </ul>
+              )}
+
+              {/* Barra de fortaleza */}
+              {password && (
+                <div className={styles.strengthWrapper}>
+                  <div className={styles.strengthBar}>
+                    <div
+                      className={`${styles.strengthFill} ${styles[`strength_${passwordStrength.level}`]}`}
+                      style={{ width: `${passwordStrength.percent}%` }}
+                    />
+                  </div>
+                  <div className={styles.strengthLabels}>
+                    <span className={styles[`strengthText_${passwordStrength.level}`]}>
+                      {passwordStrength.level === "debil"  && "Contraseña débil"}
+                      {passwordStrength.level === "media"  && "Contraseña media"}
+                      {passwordStrength.level === "fuerte" && "✓ ¡Contraseña fuerte!"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Error de contraseña */}
+              {touched.password && passwordError && (
+                <span id={passwordErrorId} role="alert" aria-live="polite" className={styles.fieldError}>
+                  {passwordError}
+                </span>
+              )}
+            </div>
+
+            {/* Botón submit */}
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+            </button>
+          </form>
+
+          <div className={styles.separator} aria-hidden="true"><span>o</span></div>
+
+          {/* Botón demo */}
+          <button
+            className={styles.btnDemo}
+            onClick={handleDemoLogin}
+            disabled={loading}
+            aria-busy={loading}
+          >
+            {loading ? "Iniciando sesión..." : "Entrar como usuario demo"}
+          </button>
+
+          <p className={styles.demoNote}>Solo para pruebas — no requiere backend</p>
+
+        </div>
+      </div>
+
+      <div className={styles.rightSide} />
+    </main>
   );
 }

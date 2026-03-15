@@ -1,157 +1,208 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import styles from "../marketplace.module.css";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuth } from "../../lib/AuthContext";
+import styles from "./create.module.css";
 
+const DEMO_PRODUCTS_KEY = "um_demo_products";
+const CATEGORIAS = ["Deportes", "Tecnología", "Libros", "Ropa", "Servicios", "Otros"];
 
-interface Product {
-  id: number;
-  title: string;
-  category: string;
-  price: number;
-  verified: boolean;
-  image: string;
+function loadDemoProducts() {
+  try {
+    const raw = sessionStorage.getItem(DEMO_PRODUCTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
-const PRODUCTS: Product[] = [
-  {
-    id: 1,
-    title: "",
-    category: "",
-    price: 0,
-    verified: true,
-    image: "/placeholder.jpg",
-  },
-  {
-    id: 2,
-    title: "",
-    category: "",
-    price: 0,
-    verified: true,
-    image: "/placeholder.jpg",
-  },
-  {
-    id: 3,
-    title: "",
-    category: "",
-    price: 0,
-    verified: true,
-    image: "/placeholder.jpg",
-  },
-  {
-    id: 4,
-    title: "",
-    category: "",
-    price: 0,
-    verified: true,
-    image: "/placeholder.jpg",
-  },
-];
+function saveDemoProducts(products: unknown[]) {
+  try {
+    sessionStorage.setItem(DEMO_PRODUCTS_KEY, JSON.stringify(products));
+    window.dispatchEvent(new Event("demo-products-updated"));
+  } catch { }
+}
 
-export default function MarketplacePage() {
-  const [userName, setUserName] = useState("");
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [message, setMessage] = useState("");
+// Convierte un File a base64 para que la imagen persista entre páginas
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      setUserName(parsed.name);
+export default function CreatePage() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [paso, setPaso] = useState(1);
+  const [imagenes, setImagenes] = useState<string[]>([]);
+  const [titulo, setTitulo] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [categoria, setCategoria] = useState("Tecnología");
+  const [publicando, setPublicando] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const base64s = await Promise.all(files.map(fileToBase64));
+    setImagenes((prev) => [...prev, ...base64s]);
+  };
+
+  const handleSiguiente = () => {
+    if (paso === 1 && imagenes.length < 6) {
+      return toast.error("Necesitas subir al menos 6 imágenes.");
     }
-  }, []);
-
-  const toggleFavorite = (id: number) => {
-    const isFav = favorites.includes(id);
-
-    if (isFav) {
-      setFavorites(favorites.filter((f) => f !== id));
-      setMessage("Eliminado de favoritos");
-    } else {
-      setFavorites([...favorites, id]);
-      setMessage("Agregado a favoritos ❤️");
+    if (paso === 2 && (!titulo || !precio || !descripcion)) {
+      return toast.error("Completa todos los campos.");
     }
+    setPaso(paso + 1);
+  };
 
-    setTimeout(() => setMessage(""), 2000);
+  const handlePublicar = async () => {
+    setPublicando(true);
+    const toastId = toast.loading("Publicando...");
+    await new Promise((r) => setTimeout(r, 1500));
+    toast.dismiss(toastId);
+
+    const nuevoProducto = {
+      id: `demo-${Date.now()}`,
+      categoria,
+      titulo,
+      descripcion,
+      precio,
+      estaVerificado: true,
+      imagen: imagenes[0], // base64 — persiste entre páginas
+      vendedorEmail: user?.email ?? "usuario@universidad.edu",
+    };
+
+    const productos = loadDemoProducts();
+    saveDemoProducts([nuevoProducto, ...productos]);
+
+    toast.success("¡Producto publicado!");
+    setPublicando(false);
+    router.push("/marketplace");
   };
 
   return (
-    <div className={styles.container}>
-      {/* Mensaje accesible */}
-      {message && (
-        <div aria-live="polite" className={styles.toast}>
-          {message}
+    <div className={styles.venderPage}>
+      <button className={styles.btnBackTop} onClick={() => router.back()}>←</button>
+
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <span>Publicar producto</span>
+          <span style={{ color: "#64748b", fontSize: "0.9rem" }}>Paso {paso} de 3</span>
         </div>
-      )}
 
-      <div className={styles.content}>
-        {/* Sidebar */}
-        <aside className={styles.sidebar}>
-          <h3 className={styles.sidebarTitle}>Filtros</h3>
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: `${(paso / 3) * 100}%` }} />
+        </div>
 
-          <div className={styles.filterSection}>
-            <p className={styles.filterTitle}>Categoría</p>
-            <ul>
-              <li>Laptops</li>
-              <li>Celulares</li>
-              <li>Accesorios</li>
-            </ul>
-          </div>
-
-          <button className={styles.clearBtn}>
-            Limpiar Filtros
-          </button>
-        </aside>
-
-        {/* Grid */}
-        <main className={styles.grid}>
-          {PRODUCTS.map((product) => {
-            const isFavorite = favorites.includes(product.id);
-
-            return (
-              <div key={product.id} className={styles.card}>
-                <div className={styles.imageWrapper}>
-                  <img src={product.image} alt="Producto" />
+        <div className={styles.stepContent}>
+          {paso === 1 && (
+            <div>
+              <div className={styles.uploadArea}>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className={styles.fileInput}
+                  onChange={handleFileChange}
+                />
+                <p>Click o arrastra tus fotos</p>
+                <span className={styles.imageCount}>
+                  {imagenes.length === 0
+                    ? "Sin imágenes (mínimo 6)"
+                    : `${imagenes.length} imagen${imagenes.length > 1 ? "es" : ""} subida${imagenes.length > 1 ? "s" : ""} ${imagenes.length < 6 ? `· faltan ${6 - imagenes.length}` : "✓"}`}
+                </span>
+              </div>
+              {imagenes.length > 0 && (
+                <div className={styles.previewGrid}>
+                  {imagenes.map((url, i) => (
+                    <img key={i} src={url} alt={`preview-${i}`} className={styles.previewImg} />
+                  ))}
                 </div>
+              )}
+            </div>
+          )}
 
-                <div className={styles.cardBody}>
-                  <div className={styles.categoryRow}>
-                    <span className={styles.category}>
-                      {product.category}
-                    </span>
+          {paso === 2 && (
+            <div>
+              <div className={styles.inputGroup}>
+                <label>Título</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Laptop HP 15 pulgadas"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Precio ($)</label>
+                <input
+                  type="number"
+                  placeholder="Ej: 500"
+                  value={precio}
+                  onChange={(e) => setPrecio(e.target.value)}
+                  min={0}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Descripción</label>
+                <textarea
+                  rows={4}
+                  placeholder="Describe el estado y características..."
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
 
-                    {product.verified && (
-                      <span className={styles.verified}>
-                        ✔ Verificado
-                      </span>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    aria-label="Agregar a favoritos"
-                    className={`${styles.favoriteBtn} ${
-                      isFavorite ? styles.active : ""
-                    }`}
-                    onClick={() => toggleFavorite(product.id)}
-                  >
-                    ♥
-                  </button>
-
-                  <h4 className={styles.title}>{product.title}</h4>
-
-                  <p className={styles.price}>
-                    {product.price ? `$${product.price}` : ""}
-                  </p>
-
-                  <button className={styles.contactBtn}>
-                    Contactar Vendedor
-                  </button>
+          {paso === 3 && (
+            <div>
+              <div className={styles.inputGroup}>
+                <label>Selecciona una categoría</label>
+                <div className={styles.categoryGrid}>
+                  {CATEGORIAS.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoria(cat)}
+                      className={`${styles.btnCategory} ${categoria === cat ? styles.active : ""}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </main>
+              <div className={styles.resumen}>
+                <h4>Resumen</h4>
+                <p><strong>Título:</strong> {titulo}</p>
+                <p><strong>Precio:</strong> ${precio}</p>
+                <p><strong>Categoría:</strong> {categoria}</p>
+                <p><strong>Imágenes:</strong> {imagenes.length}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.footer}>
+          {paso > 1 && (
+            <button className={styles.btnOutline} onClick={() => setPaso(paso - 1)}>
+              Atrás
+            </button>
+          )}
+          <button
+            className={styles.btnSolid}
+            onClick={paso < 3 ? handleSiguiente : handlePublicar}
+            disabled={publicando}
+            style={{ marginLeft: paso === 1 ? "auto" : undefined }}
+          >
+            {paso < 3 ? "Siguiente →" : publicando ? "Publicando..." : "Publicar"}
+          </button>
+        </div>
       </div>
     </div>
   );

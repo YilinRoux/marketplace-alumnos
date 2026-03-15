@@ -14,7 +14,8 @@
     "@supabase/supabase-js": "^2.97.0",
     "next": "16.2.0-canary.52",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

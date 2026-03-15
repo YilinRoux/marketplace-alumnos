@@ -1,13 +1,11 @@
 .container {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   min-height: 100vh;
   display: flex;
   background: #f5f5f5;
   z-index: 9999;
+  overflow-y: auto;
 }
 
 /* ── Left panel ── */
@@ -17,6 +15,9 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  overflow-y: auto;
+  align-self: flex-start;
+  min-height: 100%;
 }
 
 .card {
@@ -26,65 +27,75 @@
   max-width: 440px;
   width: 100%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  margin: 2rem auto;
 }
 
 /* ── Title ── */
-.titleBlock {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.title {
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0;
-  color: #1a1a1a;
-}
-
-.titleAccent {
-  color: #2563eb;
-}
+.titleBlock { text-align: center; margin-bottom: 2rem; }
+.title { font-size: 3rem; font-weight: 700; margin: 0; color: #1a1a1a; }
+.titleAccent { color: #2563eb; }
 
 /* ── Subtitle ── */
-.subtitleBlock {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
+.subtitleBlock { text-align: center; margin-bottom: 2.5rem; }
+.subtitle { font-size: 1.875rem; font-weight: 600; color: #1a1a1a; margin-bottom: 0.5rem; }
+.description { font-size: 0.95rem; color: #666; margin: 0; line-height: 1.5; }
 
-.subtitle {
-  font-size: 1.875rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 0.5rem;
-}
-
-.description {
-  font-size: 0.95rem;
-  color: #666;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* ── Google button ── */
-.googleBtn {
+/* ── Google button (real, deshabilitado) ── */
+.btnGoogle {
+  width: 100%;
   display: flex;
+  align-items: center;
   justify-content: center;
-  min-height: 44px;
+  gap: 12px;
+  padding: 12px 20px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
-/* ── States ── */
-.loadingText {
-  text-align: center;
-  color: #666;
-  margin-top: 1rem;
-  font-size: 0.9rem;
+/* ── Separador ── */
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1.5rem 0;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+.separator::before,
+.separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
 }
 
-.errorText {
+/* ── Demo button ── */
+.btnDemo {
+  width: 100%;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.btnDemo:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
+.btnDemo:disabled { background: #93c5fd; cursor: not-allowed; transform: none; }
+
+.demoNote {
   text-align: center;
-  color: #dc2626;
-  margin-top: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 0.75rem;
 }
 
 /* ── Right panel ── */
@@ -98,23 +109,63 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .rightSide {
-    display: none;
-  }
-
-  .leftSide {
-    padding: 1.5rem;
-  }
-
-  .card {
-    padding: 2rem 1.5rem;
-  }
-
-  .title {
-    font-size: 2.25rem;
-  }
-
-  .subtitle {
-    font-size: 1.5rem;
-  }
+  .rightSide { display: none; }
+  .leftSide { padding: 1.5rem; }
+  .card { padding: 2rem 1.5rem; }
+  .title { font-size: 2.25rem; }
+  .subtitle { font-size: 1.5rem; }
 }
+
+/* ── Form styles (en la página de login) ── */
+.fieldGroup { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.label { font-size: 0.875rem; font-weight: 500; }
+.input { padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+.input[aria-invalid="true"] { border-color: #e53e3e; }
+.fieldError { color: #e53e3e; font-size: 0.8rem; }
+.authError { background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.875rem; }
+.btnPrimary { width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.btnPrimary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Indicador de fortaleza de contraseña ── */
+.strengthWrapper { margin-top: 6px; }
+
+.strengthBar {
+  height: 4px;
+  border-radius: 99px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.strengthFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.strength_debil  { background: #ef4444; }
+.strength_media  { background: #f59e0b; }
+.strength_fuerte { background: #22c55e; }
+
+.strengthLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+
+.strengthText_debil  { color: #ef4444; font-weight: 600; }
+.strengthText_media  { color: #f59e0b; font-weight: 600; }
+.strengthText_fuerte { color: #22c55e; font-weight: 600; }
+.strengthHint { color: #6b7280; }
+
+/* ── Checklist ── */
+.checkList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.checkPending { font-size: 0.78rem; color: #9ca3af; }
+.checkDone    { font-size: 0.78rem; color: #22c55e; text-decoration: line-through; }
