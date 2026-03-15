@@ -31,11 +31,10 @@ export interface AuthState {
 
 interface AuthContextValue extends AuthState {
     logout: () => Promise<void>;
-    /** Fuerza una re-verificación con /auth/me (útil post-login) */
     refresh: () => Promise<void>;
 }
 
-// ─── sessionStorage key (solo guarda datos de presentación, nunca tokens) ────
+// ─── sessionStorage key ───────────────────────────────────────────────────────
 
 const SESSION_KEY = "um_user_cache";
 
@@ -51,15 +50,18 @@ function readSessionCache(): UserProfile | null {
 function writeSessionCache(user: UserProfile): void {
     try {
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    } catch {
-        // sessionStorage no disponible (SSR, modo privado, etc.)
-    }
+    } catch { }
 }
 
 function clearSessionCache(): void {
     try {
         sessionStorage.removeItem(SESSION_KEY);
     } catch { }
+}
+
+// Demo users never have a real backend session — detect by id prefix
+function isDemoUser(user: UserProfile): boolean {
+    return user.id.startsWith("demo-");
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -72,19 +74,24 @@ const BACKEND_URL =
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    // Inicializar con caché de sessionStorage para evitar parpadeo
     const [state, setState] = useState<AuthState>(() => {
         const cached = readSessionCache();
         if (cached) {
-            return { status: "loading", user: cached }; // 'loading' hasta confirmar con /auth/me
+            return { status: "loading", user: cached };
         }
         return { status: "loading", user: null };
     });
 
     const fetchUser = useCallback(async () => {
-        // Resetear a 'loading' antes de verificar — evita que useRequireAuth
-        // rediriga mientras la verificación está en curso (post-login)
         setState(prev => ({ ...prev, status: "loading" }));
+
+        // Si hay un usuario demo en cache, usarlo directamente sin llamar al backend
+        const cached = readSessionCache();
+        if (cached && isDemoUser(cached)) {
+            setState({ status: "authenticated", user: cached });
+            return;
+        }
+
         try {
             const res = await fetch(`${BACKEND_URL}/auth/me`, {
                 credentials: "include",
@@ -96,13 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 writeSessionCache(data.user);
                 setState({ status: "authenticated", user: data.user });
             } else {
-                // 401 u otro error → sesión inválida
+                // 401 — sesión real inválida, limpiar cache (no es demo)
                 clearSessionCache();
                 setState({ status: "unauthenticated", user: null });
             }
         } catch {
-            // Error de red — usar caché si existe, si no → no autenticado
-            const cached = readSessionCache();
+            // Error de red — usar cache si existe
             if (cached) {
                 setState({ status: "authenticated", user: cached });
             } else {
@@ -111,7 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    // Verificar sesión al montar
     useEffect(() => {
         fetchUser();
     }, [fetchUser]);
@@ -122,18 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 method: "POST",
                 credentials: "include",
             });
-        } catch {
-            // Aunque falle la petición, siempre limpiar estado local
-        } finally {
+        } catch { } finally {
             clearSessionCache();
             setState({ status: "unauthenticated", user: null });
         }
     }, []);
 
     return (
-        <AuthContext.Provider
-            value={{ ...state, logout, refresh: fetchUser }}
-        >
+        <AuthContext.Provider value={{ ...state, logout, refresh: fetchUser }}>
             {children}
         </AuthContext.Provider>
     );
@@ -141,10 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
-/**
- * Acceder al contexto de autenticación.
- * Debe usarse dentro de <AuthProvider>.
- */
 export function useAuth(): AuthContextValue {
     const ctx = useContext(AuthContext);
     if (!ctx) {

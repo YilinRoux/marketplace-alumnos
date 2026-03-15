@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthContext";
@@ -18,6 +17,7 @@ interface DemoProduct {
 }
 
 const DEMO_PRODUCTS_KEY = "um_demo_products";
+const DEMO_EMAIL = "usuario@universidad.edu";
 
 function loadDemoProducts(): DemoProduct[] {
   try {
@@ -34,14 +34,19 @@ function saveDemoProducts(products: DemoProduct[]) {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, status } = useAuth();
   const [misProductos, setMisProductos] = useState<DemoProduct[]>([]);
 
   useEffect(() => {
+    // Esperar a que el AuthContext termine de cargar
+    if (status === "loading") return;
+
     const todos = loadDemoProducts();
-    const mios = todos.filter((p) => p.vendedorEmail === (user?.email ?? "usuario@universidad.edu"));
+    // Usar email del usuario autenticado, o fallback al email demo
+    const email = user?.email ?? DEMO_EMAIL;
+    const mios = todos.filter((p) => p.vendedorEmail === email);
     setMisProductos(mios);
-  }, [user]);
+  }, [user, status]);
 
   const handleEliminar = (id: string) => {
     const todos = loadDemoProducts();
@@ -50,6 +55,17 @@ export default function ProfilePage() {
     setMisProductos((prev) => prev.filter((p) => p.id !== id));
     toast.error("Publicación eliminada correctamente");
   };
+
+  if (status === "loading") {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <h1 className={styles.title}>Mis Publicaciones Activas</h1>
+          <p style={{ color: "#6b7280" }}>Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -64,7 +80,10 @@ export default function ProfilePage() {
           <div className={styles.grid}>
             {misProductos.map((producto) => (
               <div key={producto.id} className={styles.cardWrapper}>
-                <button className={styles.btnEliminar} onClick={() => handleEliminar(producto.id)}>
+                <button
+                  className={styles.btnEliminar}
+                  onClick={() => handleEliminar(producto.id)}
+                >
                   Eliminar
                 </button>
                 <ProductCard
