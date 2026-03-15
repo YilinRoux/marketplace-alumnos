@@ -1,0 +1,26 @@
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeletonCard {
+  width: 100%;
+  border-radius: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.imagePlaceholder { height: 200px; background-color: #E2E8F0; }
+
+.content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.badge { height: 16px; width: 80px; background-color: #E2E8F0; border-radius: 4px; }
+.title { height: 24px; width: 80%; background-color: #E2E8F0; border-radius: 4px; }
+.textLine { height: 14px; width: 100%; background-color: #E2E8F0; border-radius: 4px; }
+.textLineShort { height: 14px; width: 60%; background-color: #E2E8F0; border-radius: 4px; }
+
+.actions { display: flex; gap: 12px; margin-top: 8px; }
+.button { height: 40px; flex-grow: 1; background-color: #E2E8F0; border-radius: 8px; }
+.iconButton { height: 40px; width: 40px; background-color: #E2E8F0; border-radius: 8px; flex-shrink: 0; }

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../lib/AuthContext";
 import styles from "./Navbar.module.css";
 
@@ -11,18 +11,15 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
-  // FIX Bug 3: event listener dentro de useEffect (no en el render body)
-  // para evitar memory leaks y registros duplicados en cada render.
   useEffect(() => {
     if (!open) return;
-
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
@@ -41,6 +38,15 @@ export default function Navbar() {
     router.push("/");
   };
 
+  const navLink = (href: string, label: string) => (
+    <Link
+      href={href}
+      className={`${styles.navLink} ${pathname === href ? styles.activeLink : ""}`}
+    >
+      {label}
+    </Link>
+  );
+
   return (
     <header className={styles.navbar}>
       {/* LOGO */}
@@ -49,69 +55,85 @@ export default function Navbar() {
       </Link>
 
       {/* SEARCH */}
-      <input className={styles.search} placeholder="Buscar productos..." />
+      <input
+        className={styles.search}
+        placeholder="Buscar productos marcas y más..."
+      />
 
-      {/* USER AREA */}
-      <div className={styles.userArea} ref={menuRef}>
+      {/* NAV LINKS + USER AREA */}
+      <div className={styles.rightArea}>
 
-        {/* Estado: loading → skeleton */}
-        {status === "loading" && (
-          <div className={styles.skeletonAvatar} aria-hidden="true" />
-        )}
+        {/* Links siempre visibles */}
+        <nav className={styles.navLinks}>
+          {navLink("/", "Inicio")}
+          {navLink("/marketplace", "Explorar Tienda")}
 
-        {/* Estado: no autenticado */}
-        {status === "unauthenticated" && (
-          <Link href="/auth/login" className={styles.loginBtn}>
-            Iniciar sesión
-          </Link>
-        )}
+          {/* Solo visibles cuando está logueado */}
+          {status === "authenticated" && (
+            <>
+              {navLink("/marketplace/create", "Vender")}
+              {navLink("/profile", "Mis Ventas")}
+            </>
+          )}
+        </nav>
 
-        {/* Estado: autenticado */}
-        {status === "authenticated" && user && (
-          <>
-            {/* Botón Vender */}
-            <Link href="/marketplace/create" className={styles.sellBtn}>
-              + Vender
+        {/* USER AREA */}
+        <div className={styles.userArea} ref={menuRef}>
+
+          {/* Loading skeleton */}
+          {status === "loading" && (
+            <div className={styles.skeletonAvatar} aria-hidden="true" />
+          )}
+
+          {/* No autenticado */}
+          {status === "unauthenticated" && (
+            <Link href="/auth/login" className={styles.loginBtn}>
+              Iniciar sesión
             </Link>
+          )}
 
-            {/* Avatar + dropdown */}
-            <button
-              className={styles.avatarBtn}
-              onClick={() => setOpen(!open)}
-              onKeyDown={handleKeyDown}
-              aria-haspopup="menu"
-              aria-expanded={open}
-              aria-label={`Menú de ${user.name}`}
-            >
-              <span className={styles.userName}>{user.name}</span>
-              <img
-                src={user.avatar || "/images/default-user.png"}
-                alt={user.name}
-                className={styles.avatar}
-                onError={(e) =>
-                  ((e.target as HTMLImageElement).src = "/images/user.png")
-                }
-              />
-            </button>
+          {/* Autenticado */}
+          {status === "authenticated" && user && (
+            <>
+              <button
+                className={styles.avatarBtn}
+                onClick={() => setOpen(!open)}
+                onKeyDown={handleKeyDown}
+                aria-haspopup="menu"
+                aria-expanded={open}
+                aria-label={`Menú de ${user.name}`}
+              >
+                <span className={styles.userName}>
+                  Hola, {user.name.split(" ")[0]}
+                </span>
+                <span className={styles.chevron}>▼</span>
+                <img
+                  src={user.avatar || "/images/default-user.png"}
+                  alt={user.name}
+                  className={styles.avatar}
+                  onError={(e) =>
+                    ((e.target as HTMLImageElement).src = "/images/default-user.png")
+                  }
+                />
+              </button>
 
-            {open && (
-              <div className={styles.dropdown} role="menu">
-                <Link href="/profile" role="menuitem" onClick={() => setOpen(false)}>
-                  Perfil
-                </Link>
-                <Link href="/marketplace/mis-publicaciones" role="menuitem" onClick={() => setOpen(false)}>
-                  Mis publicaciones
-                </Link>
-
-                <hr className={styles.divider} />
-
-                <button onClick={handleLogout} className={styles.logout} role="menuitem">
-                  Cerrar sesión
-                </button>
-              </div>
-            )}
-          </>
-        )}
+              {open && (
+                <div className={styles.dropdown} role="menu">
+                  <Link href="/profile" role="menuitem" onClick={() => setOpen(false)}>
+                    Mi Perfil
+                  </Link>
+                  <Link href="/profile" role="menuitem" onClick={() => setOpen(false)}>
+                    Mis publicaciones
+                  </Link>
+                  <hr className={styles.divider} />
+                  <button onClick={handleLogout} className={styles.logout} role="menuitem">
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

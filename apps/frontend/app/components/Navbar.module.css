@@ -9,6 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
+  gap: 24px;
 }
 
 /* LOGO */
@@ -17,39 +18,76 @@
   font-size: 20px;
   color: #111827;
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-
-.logo span {
-  color: #2563eb;
-}
+.logo span { color: #2563eb; }
 
 /* SEARCH */
 .search {
-  width: 350px;
-  padding: 10px 14px;
+  width: 320px;
+  padding: 10px 16px;
   border-radius: 20px;
   border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.search:focus { outline: none; border-color: #2563eb; }
+
+/* RIGHT AREA — nav links + user */
+.rightArea {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
 }
 
-/* USSUARIO */
+/* NAV LINKS */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navLink {
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.navLink:hover { color: #2563eb; background: #eff6ff; }
+.activeLink { color: #2563eb; font-weight: 700; border-bottom: 2px solid #2563eb; border-radius: 0; }
+
+/* USER AREA */
 .userArea {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* LOGIN */
+/* LOGIN BTN */
 .loginBtn {
   padding: 10px 20px;
   border-radius: 20px;
   background: #2563eb;
   color: white;
   text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: background 0.2s;
 }
+.loginBtn:hover { background: #1d4ed8; }
 
-/* AVATAR */
+/* AVATAR BTN */
 .avatarBtn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -59,50 +97,32 @@
   border-radius: 999px;
   transition: all 0.2s ease;
 }
+.avatarBtn:hover { background: rgba(37, 99, 235, 0.08); }
+.avatarBtn:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
 
-
-.avatarBtn:hover {
-  background: rgba(37, 99, 235, 0.08);
-  transform: scale(1.05);
-}
-
-.avatarBtn:active {
-  transform: scale(0.95);
-}
-
-.avatarBtn:focus-visible {
-  outline: 3px solid #2563eb;
-  outline-offset: 3px;
-}
-
-
+.userName { color: #111827; font-weight: 600; font-size: 0.9rem; }
+.chevron { font-size: 0.65rem; color: #6b7280; }
 
 .avatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.avatarBtn:hover .avatar {
-  transform: scale(1.12);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
 
 /* DROPDOWN */
 .dropdown {
   position: absolute;
   right: 0;
-  top: 55px;
+  top: 52px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
   width: 200px;
   display: flex;
   flex-direction: column;
-  animation: fadeIn 0.2s ease;
+  animation: dropdownPop 0.15s ease;
+  z-index: 100;
 }
 
 .dropdown a,
@@ -114,90 +134,32 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
 }
+.dropdown a:first-child { border-radius: 12px 12px 0 0; }
+.dropdown a:hover, .logout:hover { background: #f3f4f6; }
 
-.dropdown a:hover,
-.logout:hover {
-  background: #f3f4f6;
-}
+.logout { color: #dc2626; }
+.logout:last-child { border-radius: 0 0 12px 12px; }
 
-.logout {
-  color: #dc2626;
-}
-
-.userName {
-  color: #111827;
-  font-weight: 600;
-}
-
-.dropdown {
-  transform-origin: top right;
-  animation: dropdownPop 0.2s ease;
-}
+.divider { border: none; border-top: 1px solid #e5e7eb; margin: 4px 0; }
 
 @keyframes dropdownPop {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* SELL BUTTON */
-.sellBtn {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 18px;
-  border-radius: 20px;
-  background: #2563eb;
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  margin-right: 8px;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-
-.sellBtn:hover {
-  background: #1d4ed8;
-  transform: scale(1.03);
-}
-
-/* SKELETON AVATAR (anti-flicker durante loading) */
+/* SKELETON */
 .skeletonAvatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
 }
-
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* DIVIDER en dropdown */
-.divider {
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 4px 0;
-}
-
-/* User area flexbox para botón Vender + avatar */
-.userArea {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
