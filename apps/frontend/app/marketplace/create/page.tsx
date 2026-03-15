@@ -23,6 +23,16 @@ function saveDemoProducts(products: unknown[]) {
   } catch { }
 }
 
+// Convierte un File a base64 para que la imagen persista entre páginas
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CreatePage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -35,10 +45,10 @@ export default function CreatePage() {
   const [categoria, setCategoria] = useState("Tecnología");
   const [publicando, setPublicando] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setImagenes((prev) => [...prev, ...urls]);
+    const base64s = await Promise.all(files.map(fileToBase64));
+    setImagenes((prev) => [...prev, ...base64s]);
   };
 
   const handleSiguiente = () => {
@@ -53,9 +63,9 @@ export default function CreatePage() {
 
   const handlePublicar = async () => {
     setPublicando(true);
-    toast.loading("Publicando...");
+    const toastId = toast.loading("Publicando...");
     await new Promise((r) => setTimeout(r, 1500));
-    toast.dismiss();
+    toast.dismiss(toastId);
 
     const nuevoProducto = {
       id: `demo-${Date.now()}`,
@@ -64,7 +74,7 @@ export default function CreatePage() {
       descripcion,
       precio,
       estaVerificado: true,
-      imagen: imagenes[0],
+      imagen: imagenes[0], // base64 — persiste entre páginas
       vendedorEmail: user?.email ?? "usuario@universidad.edu",
     };
 
@@ -94,7 +104,13 @@ export default function CreatePage() {
           {paso === 1 && (
             <div>
               <div className={styles.uploadArea}>
-                <input type="file" multiple accept="image/*" className={styles.fileInput} onChange={handleFileChange} />
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className={styles.fileInput}
+                  onChange={handleFileChange}
+                />
                 <p>Click o arrastra tus fotos</p>
                 <span className={styles.imageCount}>
                   {imagenes.length === 0
@@ -116,15 +132,31 @@ export default function CreatePage() {
             <div>
               <div className={styles.inputGroup}>
                 <label>Título</label>
-                <input type="text" placeholder="Ej: Laptop HP 15 pulgadas" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                <input
+                  type="text"
+                  placeholder="Ej: Laptop HP 15 pulgadas"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                />
               </div>
               <div className={styles.inputGroup}>
                 <label>Precio ($)</label>
-                <input type="number" placeholder="Ej: 500" value={precio} onChange={(e) => setPrecio(e.target.value)} min={0} />
+                <input
+                  type="number"
+                  placeholder="Ej: 500"
+                  value={precio}
+                  onChange={(e) => setPrecio(e.target.value)}
+                  min={0}
+                />
               </div>
               <div className={styles.inputGroup}>
                 <label>Descripción</label>
-                <textarea rows={4} placeholder="Describe el estado y características..." value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+                <textarea
+                  rows={4}
+                  placeholder="Describe el estado y características..."
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                />
               </div>
             </div>
           )}
@@ -135,8 +167,11 @@ export default function CreatePage() {
                 <label>Selecciona una categoría</label>
                 <div className={styles.categoryGrid}>
                   {CATEGORIAS.map((cat) => (
-                    <button key={cat} onClick={() => setCategoria(cat)}
-                      className={`${styles.btnCategory} ${categoria === cat ? styles.active : ""}`}>
+                    <button
+                      key={cat}
+                      onClick={() => setCategoria(cat)}
+                      className={`${styles.btnCategory} ${categoria === cat ? styles.active : ""}`}
+                    >
                       {cat}
                     </button>
                   ))}
@@ -155,7 +190,9 @@ export default function CreatePage() {
 
         <div className={styles.footer}>
           {paso > 1 && (
-            <button className={styles.btnOutline} onClick={() => setPaso(paso - 1)}>Atrás</button>
+            <button className={styles.btnOutline} onClick={() => setPaso(paso - 1)}>
+              Atrás
+            </button>
           )}
           <button
             className={styles.btnSolid}

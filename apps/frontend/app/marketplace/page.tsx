@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "./marketplace.module.css";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SkeletonCard from "../components/SkeletonCard/SkeletonCard";
@@ -54,57 +54,79 @@ function loadDemoProducts(): DemoProduct[] {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [precioMaximo, setPrecioMaximo] = useState(2000);
-  const [sort, setSort] = useState("recent");
-  const [page, setPage] = useState(1);
+  const [search, setSearch]               = useState("");
+  const [category, setCategory]           = useState("");
+  const [precioMaximo, setPrecioMaximo]   = useState(2000);
+  const [precioInput, setPrecioInput]     = useState(2000); // valor visual del slider
+  const [sort, setSort]                   = useState("recent");
+  const [page, setPage]                   = useState(1);
 
-  const [products, setProducts] = useState<BackendProduct[]>([]);
-  const [demoProducts, setDemoProducts] = useState<DemoProduct[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts]           = useState<BackendProduct[]>([]);
+  const [demoProducts, setDemoProducts]   = useState<DemoProduct[]>([]);
+  const [categories, setCategories]       = useState<Category[]>([]);
+  const [pagination, setPagination]       = useState<Pagination | null>(null);
+  const [loading, setLoading]             = useState(true);
 
-  // Cargar productos demo de sessionStorage
-  useEffect(() => {
+  // ── Debounce del slider de precio ──────────────────────────────────────────
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handlePrecioChange = (value: number) => {
+    setPrecioInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPrecioMaximo(value);
+      setPage(1);
+    }, 400);
+  };
+
+  // ── Cargar productos demo desde sessionStorage ──────────────────────────────
+  // Se ejecuta al montar Y cada vez que se dispara el evento
+  const refreshDemos = useCallback(() => {
     setDemoProducts(loadDemoProducts());
-
-    // Escuchar cambios (cuando se publica un producto nuevo)
-    const handleStorage = () => setDemoProducts(loadDemoProducts());
-    window.addEventListener("demo-products-updated", handleStorage);
-    return () => window.removeEventListener("demo-products-updated", handleStorage);
   }, []);
 
-  // Fetch categorías del backend
+  useEffect(() => {
+    refreshDemos(); // carga inicial (cubre el caso de navegación desde /create)
+
+    window.addEventListener("demo-products-updated", refreshDemos);
+    return () => window.removeEventListener("demo-products-updated", refreshDemos);
+  }, [refreshDemos]);
+
+  // ── Fetch categorías ────────────────────────────────────────────────────────
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/categories`, { credentials: "include" })
       .then((r) => r.json())
-      .then((data: Category[]) => setCategories(data))
+      .then((data) => {
+        const list: Category[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.categories)
+          ? data.categories
+          : [];
+        setCategories(list);
+      })
       .catch(() => setCategories([]));
   }, []);
 
-  // Fetch productos del backend
+  // ── Fetch productos del backend ─────────────────────────────────────────────
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    setError(null);
     const params = new URLSearchParams();
     if (search.trim()) params.set("search", search.trim());
-    if (category) params.set("category", category);
+    if (category)      params.set("category", category);
     if (precioMaximo < 2000) params.set("maxPrice", String(precioMaximo));
-    params.set("sort", sort);
-    params.set("page", String(page));
+    params.set("sort",  sort);
+    params.set("page",  String(page));
     params.set("limit", String(LIMIT));
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/products?${params.toString()}`, { credentials: "include" });
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setProducts(json.data ?? []);
+      setProducts(Array.isArray(json.data) ? json.data : []);
       setPagination(json.pagination ?? null);
     } catch {
-      setError(null); // No mostrar error — simplemente mostrar solo demos
       setProducts([]);
     } finally {
       setLoading(false);
@@ -114,14 +136,15 @@ export default function MarketplacePage() {
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   const limpiarFiltros = () => {
-    setSearch(""); setCategory(""); setPrecioMaximo(2000); setSort("recent"); setPage(1);
+    setSearch(""); setCategory(""); setPrecioMaximo(2000);
+    setPrecioInput(2000); setSort("recent"); setPage(1);
   };
 
-  // Filtrar demos por búsqueda y categoría
+  // ── Filtrar demos ───────────────────────────────────────────────────────────
   const filteredDemos = demoProducts.filter((p) => {
-    const matchSearch = !search || p.titulo.toLowerCase().includes(search.toLowerCase());
-    const matchCat = !category || p.categoria.toLowerCase() === category.toLowerCase();
-    const matchPrice = !precioMaximo || Number(p.precio) <= precioMaximo;
+    const matchSearch = !search   || p.titulo.toLowerCase().includes(search.toLowerCase());
+    const matchCat    = !category || p.categoria.toLowerCase() === category.toLowerCase();
+    const matchPrice  = Number(p.precio) <= precioMaximo;
     return matchSearch && matchCat && matchPrice;
   });
 
@@ -160,13 +183,16 @@ export default function MarketplacePage() {
                 <span>{cat.name}</span>
               </div>
             ))}
-            {categories.length === 0 && <p style={{ fontSize: "0.85rem", color: "#9ca3af" }}>Sin categorías</p>}
+            {categories.length === 0 && (
+              <p style={{ fontSize: "0.85rem", color: "#9ca3af" }}>Sin categorías</p>
+            )}
           </div>
 
           <div className={styles.filterSection}>
-            <h3>Precio: Hasta ${precioMaximo}</h3>
-            <input type="range" min={0} max={2000} value={precioMaximo}
-              onChange={(e) => { setPrecioMaximo(Number(e.target.value)); setPage(1); }}
+            <h3>Precio: Hasta ${precioInput}</h3>
+            <input
+              type="range" min={0} max={2000} value={precioInput}
+              onChange={(e) => handlePrecioChange(Number(e.target.value))}
               style={{ width: "100%", cursor: "pointer" }}
             />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748B", marginTop: "5px" }}>
@@ -176,14 +202,20 @@ export default function MarketplacePage() {
 
           <div className={styles.filterSection}>
             <h3>Ordenar por</h3>
-            <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className={styles.searchInput}>
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value); setPage(1); }}
+              className={styles.searchInput}
+            >
               <option value="recent">Más recientes</option>
               <option value="price_asc">Precio: menor a mayor</option>
               <option value="price_desc">Precio: mayor a menor</option>
             </select>
           </div>
 
-          <button className={styles.btnClearFilters} onClick={limpiarFiltros}>Limpiar Filtros</button>
+          <button className={styles.btnClearFilters} onClick={limpiarFiltros}>
+            Limpiar Filtros
+          </button>
         </aside>
 
         {/* GRID */}
@@ -196,7 +228,7 @@ export default function MarketplacePage() {
               key={p.id}
               categoria={p.categoria}
               titulo={p.titulo}
-              descripcion={p.descripcion}
+              descripcion={`$${p.precio}`}
               estaVerificado={p.estaVerificado}
               imagen={p.imagen}
             />
@@ -222,9 +254,21 @@ export default function MarketplacePage() {
 
           {!loading && pagination && totalPages > 1 && (
             <div className={styles.pagination}>
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className={styles.btnClearFilters}>← Anterior</button>
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className={styles.btnClearFilters}
+              >
+                ← Anterior
+              </button>
               <span>Página {page} de {totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className={styles.btnClearFilters}>Siguiente →</button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className={styles.btnClearFilters}
+              >
+                Siguiente →
+              </button>
             </div>
           )}
         </main>
