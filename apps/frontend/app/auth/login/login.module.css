@@ -5,6 +5,7 @@
   display: flex;
   background: #f5f5f5;
   z-index: 9999;
+  overflow-y: auto;
 }
 
 /* ── Left panel ── */
@@ -14,6 +15,9 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  overflow-y: auto;
+  align-self: flex-start;
+  min-height: 100%;
 }
 
 .card {
@@ -23,6 +27,7 @@
   max-width: 440px;
   width: 100%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  margin: 2rem auto;
 }
 
 /* ── Title ── */
@@ -110,3 +115,57 @@
   .title { font-size: 2.25rem; }
   .subtitle { font-size: 1.5rem; }
 }
+
+/* ── Form styles (en la página de login) ── */
+.fieldGroup { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.label { font-size: 0.875rem; font-weight: 500; }
+.input { padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+.input[aria-invalid="true"] { border-color: #e53e3e; }
+.fieldError { color: #e53e3e; font-size: 0.8rem; }
+.authError { background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.875rem; }
+.btnPrimary { width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.btnPrimary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Indicador de fortaleza de contraseña ── */
+.strengthWrapper { margin-top: 6px; }
+
+.strengthBar {
+  height: 4px;
+  border-radius: 99px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.strengthFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.strength_debil  { background: #ef4444; }
+.strength_media  { background: #f59e0b; }
+.strength_fuerte { background: #22c55e; }
+
+.strengthLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+
+.strengthText_debil  { color: #ef4444; font-weight: 600; }
+.strengthText_media  { color: #f59e0b; font-weight: 600; }
+.strengthText_fuerte { color: #22c55e; font-weight: 600; }
+.strengthHint { color: #6b7280; }
+
+/* ── Checklist ── */
+.checkList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.checkPending { font-size: 0.78rem; color: #9ca3af; }
+.checkDone    { font-size: 0.78rem; color: #22c55e; text-decoration: line-through; }
