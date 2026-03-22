@@ -169,7 +169,7 @@ router.get("/sessions", requireSession as unknown as (req: Request, res: Respons
  */
 router.delete("/sessions/:id", requireSession as unknown as (req: Request, res: Response) => void, (req: Request, res: Response): void => {
   const session = (req as Request & { session: { userId: string } }).session;
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   const deleted = deleteSession(id, session.userId);
   if (!deleted) {
