@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["pnpm", "dev", "dist/index.js"]
+CMD ["pnpm", "dev", "start"]

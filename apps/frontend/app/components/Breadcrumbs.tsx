@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import styles from "./Breadcrumbs.module.css";
 
 export default function Breadcrumbs() {
   const pathname = usePathname();
@@ -11,8 +12,8 @@ export default function Breadcrumbs() {
   if (segments.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb">
-      <ol style={{ padding: "8px 32px", display: "flex", gap: "8px" }}>
+    <nav aria-label="Breadcrumb" className={styles.breadcrumbsNav}>
+      <ol className={styles.breadcrumbsList}>
         <li>
           <Link href="/">Inicio</Link>
         </li>

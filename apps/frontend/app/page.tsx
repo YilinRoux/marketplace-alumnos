@@ -1,123 +1,140 @@
-"use client";
-
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./page.module.css";
 
 export default function HomePage() {
   return (
-    <section className={styles.container}>
-      {/* HERO */}
-      <header className={styles.hero}>
-        <div className={styles.heroContent}>
-          <h1>
-            UNIMARKET <br />
-            <span>Ideal para el intercambio universitario</span>
-          </h1>
+    <div>
 
-          <p>
-            Compra, vende o intercambia productos entre estudiantes de forma
-            segura y sencilla.
-          </p>
+      {/* CONTENEDOR CENTRAL */}
+      <div className={styles.container}>
 
-          <Link href="/marketplace" className={styles.primaryButton}>
-            Ver productos
-          </Link>
-        </div>
+        {/* ── HERO ─────────────────────────────────────────────── */}
+        <section className={styles.hero}>
+          <Image
+            src="/images/hero-image.jpg"
+            alt="Escritorio universitario"
+            width={600}
+            height={400}
+            className={styles.heroImage}
+            priority
+          />
+          <div className={styles.heroContent}>
+            <h1>
+              UNI<span>MARKET</span><br />
+              IDEAL<br />
+              PARA EL<br />
+              INTERCAMBIO<br />
+              UNIVERSITARIO
+            </h1>
+            <Link href="/marketplace" className={styles.btnPrimary}>
+              VER PRODUCTOS
+            </Link>
+          </div>
+        </section>
 
-        <div
-          className={styles.heroImage}
-          aria-hidden="true"
-        />
-      </header>
+        {/* ── CATEGORÍAS ───────────────────────────────────────── */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Categorías Destacadas</h2>
+          <div className={styles.grid}>
+            <div className={styles.card}>
+              <Image
+                src="/images/book.png.png"
+                alt="Libro"
+                width={60}
+                height={60}
+                className={styles.cardIcon}
+              />
+              <h3 className={styles.cardTitle}>Material<br />Académico</h3>
+              <p style={{ fontSize: "0.8rem" }}>Libros, apuntes y herramientas para tus clases</p>
+            </div>
+            <div className={styles.card}>
+              <Image
+                src="/images/communication.png"
+                alt="Tecnología"
+                width={60}
+                height={60}
+                className={styles.cardIcon}
+              />
+              <h3 className={styles.cardTitle}>Tecnología</h3>
+              <p style={{ fontSize: "0.8rem" }}>Dispositivos y accesorios a precios de estudiante</p>
+            </div>
+            <div className={styles.card}>
+              <Image
+                src="/images/save-instagram.png"
+                alt="Servicios"
+                width={60}
+                height={60}
+                className={styles.cardIcon}
+              />
+              <h3 className={styles.cardTitle}>Servicios y<br />habilidades</h3>
+              <p style={{ fontSize: "0.8rem" }}>Clases, diseño, reparaciones y más entre alumnos</p>
+            </div>
+          </div>
+        </section>
 
-      {/* CATEGORÍAS */}
-      <section
-        className={styles.categories}
-        aria-labelledby="categories-title"
-      >
-        <h2 id="categories-title">Categorías destacadas</h2>
+        {/* ── CÓMO FUNCIONA ────────────────────────────────────── */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Como funciona:</h2>
+          <div className={styles.grid}>
+            <div className={styles.card}>
+              <Image
+                src="/images/default-user.png"
+                alt="Usuario"
+                width={60}
+                height={60}
+                className={styles.cardIcon}
+              />
+              <p><strong>Regístrate</strong> con tu cuenta universitaria</p>
+            </div>
+            <div className={styles.card}>
+              <Image
+                src="/images/buscar.png"
+                alt="Buscar"
+                width={60}
+                height={60}
+                className={styles.cardIcon}
+              />
+              <p><strong>Publica</strong> o <strong>explora</strong> productos</p>
+            </div>
+            <div className={styles.card}>
+              <Image
+                src="/images/marque-el-circulo.png"
+                alt="Conectar"
+                width={60}
+                height={60}
+                className={styles.cardIcon}
+              />
+              <p>Conecta y concreta</p>
+            </div>
+          </div>
+        </section>
 
-        <ul className={styles.categoryGrid}>
-          <li>
-            <button className={styles.card}>
-              <span className={styles.icon}></span>
-              <span>Material académico</span>
-            </button>
-          </li>
-          <li>
-            <button className={styles.card}>
-              <span className={styles.icon}></span>
-              <span>Tecnología</span>
-            </button>
-          </li>
-          <li>
-            <button className={styles.card}>
-              <span className={styles.icon}></span>
-              <span>Servicios</span>
-            </button>
-          </li>
-        </ul>
-      </section>
+      </div>
 
-      {/* CÓMO FUNCIONA */}
-      <section
-        className={styles.howItWorks}
-        aria-labelledby="how-title"
-      >
-        <h2 id="how-title">¿Cómo funciona?</h2>
-
-        <ol className={styles.steps}>
-          <li>
-            <strong>1.</strong>
-            <p>Regístrate con tu cuenta universitaria</p>
-          </li>
-          <li>
-            <strong>2.</strong>
-            <p>Publica o busca productos fácilmente</p>
-          </li>
-          <li>
-            <strong>3.</strong>
-            <p>Conecta y concreta el intercambio</p>
-          </li>
-        </ol>
-      </section>
-
-      {/* FOOTER */}
+      {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-
-          <div className={styles.footerBrand}>
-            <h3>UNIMARKET</h3>
-            <p>
-              Plataforma universitaria para comprar, vender e intercambiar
-              productos entre estudiantes.
-            </p>
+        <div className={styles.footerLogo}>UNI<span>MARKET</span></div>
+        <div className={styles.footerColumn}>
+          <h4>Comprar</h4>
+          <p>Tendencias</p>
+          <p>Categoría</p>
+          <p>Ofertas Flash</p>
+        </div>
+        <div className={styles.footerColumn}>
+          <h4>Vender</h4>
+          <p><Link href="/marketplace/create" style={{ color: "#94A3B8", textDecoration: "none" }}>Publicar producto</Link></p>
+          <p><Link href="/profile" style={{ color: "#94A3B8", textDecoration: "none" }}>Mis publicaciones</Link></p>
+        </div>
+        <div className={styles.footerColumn}>
+          <h4>Comentarios</h4>
+          <div className={styles.footerInput}>
+            <input type="text" placeholder="Escribe aquí..." />
+            <button type="button">→</button>
           </div>
-
-          <div className={styles.footerLinks}>
-            <h4>Enlaces</h4>
-            <ul>
-              <li>
-                <Link href="/">Inicio</Link>
-              </li>
-              <li>
-                <Link href="/productos">Productos</Link>
-              </li>
-              <li>
-                <Link href="/auth/login">Login</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className={styles.footerContact}>
-            <h4>Contacto</h4>
-            <p>soportenimarket.edu</p>
-            <p> 2026 UNIMARKET. Todos los derechos reservados.</p>
-          </div>
-
         </div>
       </footer>
 
-    </section>
+    </div>
   );
 }
