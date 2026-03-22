@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import React, { useState, useId } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
+import { supabase } from "../../lib/supabase";
 import styles from "./login.module.css";
 
 // ── Ícono Google ──────────────────────────────────────────────────────────────
@@ -77,6 +78,24 @@ function validatePassword(value: string): string {
   return "";
 }
 
+// ── Mapeo de errores de Supabase a mensajes amigables ─────────────────────────
+function mapSupabaseError(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes("invalid login credentials"))
+    return "Usuario o contraseña incorrectos.";
+  if (lower.includes("email not confirmed"))
+    return "Tu correo aún no ha sido confirmado. Revisa tu bandeja de entrada.";
+  if (lower.includes("too many requests") || lower.includes("rate limit"))
+    return "Demasiados intentos. Espera un momento antes de intentar de nuevo.";
+  if (lower.includes("user not found"))
+    return "No existe una cuenta con ese correo.";
+  if (lower.includes("email rate limit"))
+    return "Se ha excedido el límite de envío de correos. Intenta más tarde.";
+  if (lower.includes("signup disabled"))
+    return "El registro de nuevos usuarios está deshabilitado.";
+  return message || "Error de autenticación. Intenta de nuevo.";
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
@@ -96,9 +115,12 @@ export default function LoginPage() {
   const [passwordError,    setPasswordError]    = useState("");
   const [authError,        setAuthError]        = useState("");
   const [loading,          setLoading]          = useState(false);
+  const [googleLoading,    setGoogleLoading]    = useState(false);
   const [touched,          setTouched]          = useState({ email: false, password: false });
   const [showPassword,     setShowPassword]     = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(getPasswordStrength(""));
+
+  const isAnyLoading = loading || googleLoading;
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleBlurEmail = () => {
@@ -111,6 +133,7 @@ export default function LoginPage() {
     setPasswordError(validatePassword(password));
   };
 
+  // ── Email/Password Login via Supabase ────────────────────────────────────────
   const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -125,28 +148,55 @@ export default function LoginPage() {
     setAuthError("");
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 1500));
-
-    const isValid = email === DEMO_USER.email && password.length >= 8;
-
-    if (!isValid) {
-      setAuthError("Usuario o contraseña incorrectos.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(DEMO_USER));
-    } catch {}
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    await refresh();
+      if (error) {
+        setAuthError(mapSupabaseError(error.message));
+        setLoading(false);
+        return;
+      }
 
-    const role: string = DEMO_USER.role;
-    if (role === "admin")       router.push("/admin");
-    else if (role === "seller") router.push("/seller");
-    else                        router.push("/marketplace");
+      // onAuthStateChange in AuthContext handles token forwarding and fetchUser.
+      // Wait a moment for the state to propagate, then redirect.
+      await refresh();
+
+      router.push("/marketplace");
+    } catch {
+      setAuthError("Error de conexión. Verifica tu conexión a internet.");
+      setLoading(false);
+    }
   };
 
+  // ── Google OAuth Login ───────────────────────────────────────────────────────
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setAuthError("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        setAuthError(mapSupabaseError(error.message));
+        setGoogleLoading(false);
+      }
+      // If no error, the browser redirects away to Google.
+      // googleLoading stays true until the page unloads.
+    } catch {
+      setAuthError("No se pudo iniciar el login con Google. Intenta de nuevo.");
+      setGoogleLoading(false);
+    }
+  };
+
+  // ── Demo Login (unchanged) ──────────────────────────────────────────────────
   const handleDemoLogin = async () => {
     setLoading(true);
     setAuthError("");
@@ -187,10 +237,15 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Botón Google deshabilitado */}
-          <button className={styles.btnGoogle} disabled aria-disabled="true">
+          {/* Botón Google */}
+          <button
+            className={styles.btnGoogle}
+            onClick={handleGoogleLogin}
+            disabled={isAnyLoading}
+            aria-busy={googleLoading}
+          >
             <GoogleIcon />
-            Acceder con Google
+            {googleLoading ? "Redirigiendo a Google..." : "Acceder con Google"}
           </button>
 
           <div className={styles.separator} aria-hidden="true"><span>o</span></div>
@@ -224,7 +279,7 @@ export default function LoginPage() {
                 aria-required="true"
                 aria-invalid={touched.email && !!emailError ? "true" : "false"}
                 aria-describedby={touched.email && emailError ? emailErrorId : undefined}
-                disabled={loading}
+                disabled={isAnyLoading}
                 placeholder="correo@universidad.edu"
               />
               {touched.email && emailError && (
@@ -257,10 +312,18 @@ export default function LoginPage() {
                   aria-required="true"
                   aria-invalid={touched.password && !!passwordError ? "true" : "false"}
                   aria-describedby={touched.password && passwordError ? passwordErrorId : undefined}
-                  disabled={loading}
+                  disabled={isAnyLoading}
                   placeholder="Mínimo 8 caracteres"
                 />
-                
+                <button
+                  type="button"
+                  className={styles.eyeBtn}
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeClosed /> : <EyeOpen />}
+                </button>
               </div>
 
               {/* Checklist de requisitos — desaparece cuando todos se cumplen */}
@@ -312,7 +375,7 @@ export default function LoginPage() {
             <button
               type="submit"
               className={styles.btnPrimary}
-              disabled={loading}
+              disabled={isAnyLoading}
               aria-busy={loading}
             >
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
@@ -325,7 +388,7 @@ export default function LoginPage() {
           <button
             className={styles.btnDemo}
             onClick={handleDemoLogin}
-            disabled={loading}
+            disabled={isAnyLoading}
             aria-busy={loading}
           >
             {loading ? "Iniciando sesión..." : "Entrar como usuario demo"}
