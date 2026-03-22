@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
 
 // Mock next/navigation
@@ -48,14 +48,16 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(
-      screen.getByRole("heading", { name: /bienvenido/i })
+      screen.getByRole("heading", { name: /bienvenido/i }),
     ).toBeInTheDocument();
   });
 
   test("renderiza el botón de Google habilitado", () => {
     render(<LoginPage />);
 
-    const googleBtn = screen.getByRole("button", { name: /acceder con google/i });
+    const googleBtn = screen.getByRole("button", {
+      name: /acceder con google/i,
+    });
     expect(googleBtn).toBeInTheDocument();
     expect(googleBtn).not.toBeDisabled();
   });
@@ -71,7 +73,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(
-      screen.getByRole("button", { name: /entrar como usuario demo/i })
+      screen.getByRole("button", { name: /entrar como usuario demo/i }),
     ).toBeInTheDocument();
   });
 
@@ -79,7 +81,34 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(
-      screen.getByRole("button", { name: /iniciar sesión/i })
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    ).toBeInTheDocument();
+  });
+
+  test("cambia entre login y registro al hacer clic en el toggle", () => {
+    render(<LoginPage />);
+
+    // Por defecto es login
+    expect(
+      screen.getByRole("heading", { name: /bienvenido/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    ).toBeInTheDocument();
+
+    // Buscar el texto del toggle
+    const toggleText = screen.getByText(/¿no tienes cuenta\? regístrate/i);
+    fireEvent.click(toggleText);
+
+    // Debe cambiar a registro
+    expect(
+      screen.getByRole("heading", { name: /crear cuenta/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /registrarse/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/¿ya tienes cuenta\? inicia sesión/i),
     ).toBeInTheDocument();
   });
 });
