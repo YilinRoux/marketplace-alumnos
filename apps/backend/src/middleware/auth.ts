@@ -65,6 +65,7 @@ export async function requireAuth(
         await supabase.auth.getUser(accessToken);
 
     let supabaseUserId: string;
+    let supabaseUser: any;
 
     if (userError || !userData.user) {
         // Token inválido o expirado — intentar refresh
@@ -96,9 +97,11 @@ export async function requireAuth(
         });
 
         supabaseUserId = refreshData.session.user.id;
+        supabaseUser = refreshData.session.user;
         logger.info({ userId: supabaseUserId }, "Sesión renovada transparentemente");
     } else {
         supabaseUserId = userData.user.id;
+        supabaseUser = userData.user;
     }
 
     // Consultar public.profiles para obtener rol y datos del perfil
@@ -114,11 +117,14 @@ export async function requireAuth(
         return;
     }
 
+    const fallbackAvatar = supabaseUser?.user_metadata?.avatar_url || supabaseUser?.user_metadata?.picture || null;
+    const fallbackName = supabaseUser?.user_metadata?.full_name || supabaseUser?.user_metadata?.name || "";
+
     req.user = {
         id: supabaseUserId,
         email: profile.email,
-        name: profile.full_name || "",
-        avatar: profile.avatar_url || null,
+        name: profile.full_name || fallbackName,
+        avatar: profile.avatar_url || fallbackAvatar,
         role: profile.role as AppRole,
         phone: profile.phone || null,
     };

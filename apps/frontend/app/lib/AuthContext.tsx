@@ -8,6 +8,7 @@ import {
     useCallback,
     ReactNode,
 } from "react";
+import { supabase } from "./supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,28 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const BACKEND_URL =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
+// ─── Helper: forward Supabase tokens to backend ──────────────────────────────
+
+async function sendTokensToBackend(
+    accessToken: string,
+    refreshToken: string
+): Promise<boolean> {
+    try {
+        const res = await fetch(`${BACKEND_URL}/auth/set-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+            }),
+        });
+        return res.ok;
+    } catch {
+        return false;
+    }
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -117,12 +140,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    // ─── onAuthStateChange: detecta login, logout y token refresh ─────────
     useEffect(() => {
+        // Fetch inicial
         fetchUser();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
+                if (
+                    (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+                    session
+                ) {
+                    // Forward tokens to backend to set HttpOnly cookies
+                    const sent = await sendTokensToBackend(
+                        session.access_token,
+                        session.refresh_token!
+                    );
+                    if (sent) {
+                        await fetchUser();
+                    }
+                }
+
+                if (event === "SIGNED_OUT") {
+                    clearSessionCache();
+                    setState({ status: "unauthenticated", user: null });
+                }
+            }
+        );
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, [fetchUser]);
 
     const logout = useCallback(async () => {
         try {
+            // Sign out from Supabase client (triggers onAuthStateChange → SIGNED_OUT)
+            await supabase.auth.signOut();
+        } catch { }
+
+        try {
+            // Also clear backend HttpOnly cookies
             await fetch(`${BACKEND_URL}/auth/logout`, {
                 method: "POST",
                 credentials: "include",

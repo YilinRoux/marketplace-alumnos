@@ -1,25 +1,37 @@
+"use client";
+
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-}));
-
-// Mock next/script to render nothing
-vi.mock("next/script", () => ({
-  __esModule: true,
-  default: () => null,
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 // Mock supabase client
 vi.mock("../../../lib/supabase", () => ({
   supabase: {
     auth: {
-      signInWithIdToken: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signInWithOAuth: vi.fn(),
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      })),
+      getSession: vi.fn(() => ({ data: { session: null } })),
+      signOut: vi.fn(),
     },
   },
+}));
+
+// Mock AuthContext
+vi.mock("../../../lib/AuthContext", () => ({
+  useAuth: () => ({
+    status: "unauthenticated",
+    user: null,
+    logout: vi.fn(),
+    refresh: vi.fn(),
+  }),
 }));
 
 import LoginPage from "../page";
@@ -36,21 +48,67 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(
-      screen.getByRole("heading", { name: /bienvenido/i })
+      screen.getByRole("heading", { name: /bienvenido/i }),
     ).toBeInTheDocument();
   });
 
-  test("renderiza el contenedor del botón de Google", () => {
-    const { container } = render(<LoginPage />);
-
-    const googleBtn = container.querySelector("#google-btn");
-    expect(googleBtn).toBeInTheDocument();
-  });
-
-  test("no renderiza campos de email ni contraseña", () => {
+  test("renderiza el botón de Google habilitado", () => {
     render(<LoginPage />);
 
-    expect(screen.queryByLabelText(/correo/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/contraseña/i)).not.toBeInTheDocument();
+    const googleBtn = screen.getByRole("button", {
+      name: /acceder con google/i,
+    });
+    expect(googleBtn).toBeInTheDocument();
+    expect(googleBtn).not.toBeDisabled();
+  });
+
+  test("renderiza campos de email y contraseña", () => {
+    render(<LoginPage />);
+
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Contraseña")).toBeInTheDocument();
+  });
+
+  test("renderiza el botón de usuario demo", () => {
+    render(<LoginPage />);
+
+    expect(
+      screen.getByRole("button", { name: /entrar como usuario demo/i }),
+    ).toBeInTheDocument();
+  });
+
+  test("renderiza el botón de iniciar sesión", () => {
+    render(<LoginPage />);
+
+    expect(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    ).toBeInTheDocument();
+  });
+
+  test("cambia entre login y registro al hacer clic en el toggle", () => {
+    render(<LoginPage />);
+
+    // Por defecto es login
+    expect(
+      screen.getByRole("heading", { name: /bienvenido/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    ).toBeInTheDocument();
+
+    // Buscar el texto del toggle
+    const toggleText = screen.getByText(/¿no tienes cuenta\? regístrate/i);
+    fireEvent.click(toggleText);
+
+    // Debe cambiar a registro
+    expect(
+      screen.getByRole("heading", { name: /crear cuenta/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /registrarse/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/¿ya tienes cuenta\? inicia sesión/i),
+    ).toBeInTheDocument();
   });
 });
