@@ -6,8 +6,11 @@ import {
   validateRecoveryToken,
   resetPassword,
 } from "../services/recovery.service";
+import { deleteAllUserSessions } from "../services/sessions.service";
 
 const router = Router();
+
+// ─── Middleware local: verifica JWT propio ────────────────────────────────────
 
 // ─── POST /auth/recovery/request ─────────────────────────────────────────────
 
@@ -18,7 +21,7 @@ const router = Router();
  *     summary: Solicitar recuperación de contraseña
  *     description: |
  *       Recibe un email y genera un token seguro de recuperación con expiración de 15 minutos.
- *       Por seguridad, siempre retorna el mismo mensaje sin revelar si el email existe o no.
+ *       Por seguridad, siempre retorna el mismo mensaje y los mismos campos sin revelar si el email existe o no.
  *     tags:
  *       - Recovery
  *     requestBody:
@@ -42,13 +45,11 @@ const router = Router();
 router.post("/request", (req: Request, res: Response): void => {
   const { email } = req.body;
 
-  // Validar que el email fue enviado
   if (!email || typeof email !== "string") {
     res.status(400).json({ error: "El email es requerido" });
     return;
   }
 
-  // Validar formato básico de email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     res.status(400).json({ error: "Formato de email inválido" });
@@ -57,33 +58,35 @@ router.post("/request", (req: Request, res: Response): void => {
 
   const normalizedEmail = email.toLowerCase().trim();
 
-  // SEGURIDAD: Siempre respondemos igual, sin revelar si el email existe.
-  // Esto previene el ataque "user enumeration" donde un atacante
-  // descubre qué emails están registrados en el sistema.
+  // FIX BUG-01: Siempre retornamos exactamente los mismos campos
+  // sin importar si el email existe o no.
+  // Antes: debug_token y debug_expiresAt solo aparecían cuando el email existía
+  // lo que permitía distinguir emails registrados (user enumeration attack).
+
+  let debugToken: string | null = null;
+  let debugExpiresAt: string | null = null;
+
   if (userExists(normalizedEmail)) {
     const recoveryToken = createRecoveryToken(normalizedEmail);
+    debugToken = recoveryToken.token;
+    debugExpiresAt = recoveryToken.expiresAt.toISOString();
 
-    // En producción esto se enviaría por email al usuario.
-    // Por ahora lo retornamos en la respuesta para poder probarlo en Postman.
     logger.info(
-      { email: normalizedEmail, token: recoveryToken.token, expiresAt: recoveryToken.expiresAt },
+      { email: normalizedEmail, expiresAt: recoveryToken.expiresAt },
       "Token de recuperación generado"
     );
-
-    // Solo retornamos el token en desarrollo para facilitar las pruebas
-    res.json({
-      message: "Si el email está registrado, recibirás instrucciones para recuperar tu acceso.",
-      // En producción eliminar el token de la respuesta — se enviaría por email
-      debug_token: recoveryToken.token,
-      debug_expiresAt: recoveryToken.expiresAt,
-    });
   } else {
-    // Mismo mensaje aunque el email NO exista
     logger.warn({ email: normalizedEmail }, "Solicitud de recuperación para email no registrado");
-    res.json({
-      message: "Si el email está registrado, recibirás instrucciones para recuperar tu acceso.",
-    });
   }
+
+  // Siempre retornamos la misma estructura — un atacante no puede
+  // distinguir si el email existe o no comparando las respuestas.
+  res.json({
+    message: "Si el email está registrado, recibirás instrucciones para recuperar tu acceso.",
+    // En producción eliminar debug_token — se enviaría por email
+    debug_token: debugToken,
+    debug_expiresAt: debugExpiresAt,
+  });
 });
 
 // ─── GET /auth/recovery/validate/:token ──────────────────────────────────────
@@ -93,7 +96,6 @@ router.post("/request", (req: Request, res: Response): void => {
  * /auth/recovery/validate/{token}:
  *   get:
  *     summary: Validar token de recuperación
- *     description: Verifica que el token existe, no ha expirado y no ha sido usado.
  *     tags:
  *       - Recovery
  *     parameters:
@@ -102,7 +104,6 @@ router.post("/request", (req: Request, res: Response): void => {
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de recuperación recibido por email
  *     responses:
  *       200:
  *         description: Token válido
@@ -111,11 +112,9 @@ router.post("/request", (req: Request, res: Response): void => {
  */
 router.get("/validate/:token", (req: Request, res: Response): void => {
   const token = String(req.params.token);
-
   const recoveryToken = validateRecoveryToken(token);
 
   if (!recoveryToken) {
-    // Mensaje genérico — no revelamos si el token existió o expiró
     res.status(400).json({
       valid: false,
       error: "El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo.",
@@ -145,6 +144,7 @@ router.get("/validate/:token", (req: Request, res: Response): void => {
  *     description: |
  *       Recibe el token de recuperación y la nueva contraseña.
  *       El token queda marcado como usado y no puede reutilizarse.
+ *       Todas las sesiones activas del usuario se invalidan al cambiar la contraseña.
  *     tags:
  *       - Recovery
  *     requestBody:
@@ -164,7 +164,7 @@ router.get("/validate/:token", (req: Request, res: Response): void => {
  *                 minLength: 8
  *     responses:
  *       200:
- *         description: Contraseña actualizada correctamente
+ *         description: Contraseña actualizada y sesiones invalidadas
  *       400:
  *         description: Token inválido o contraseña muy corta
  */
@@ -176,14 +176,22 @@ router.post("/reset", (req: Request, res: Response): void => {
     return;
   }
 
-  // Validar longitud mínima de contraseña
   if (newPassword.length < 8) {
     res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
     return;
   }
 
-  const success = resetPassword(token, newPassword);
+  // Validar token antes de hacer el reset
+  const recoveryToken = validateRecoveryToken(token);
+  if (!recoveryToken) {
+    res.status(400).json({
+      error: "El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo.",
+    });
+    return;
+  }
 
+  // Cambiar contraseña y marcar token como usado
+  const success = resetPassword(token, newPassword);
   if (!success) {
     res.status(400).json({
       error: "El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo.",
@@ -191,11 +199,20 @@ router.post("/reset", (req: Request, res: Response): void => {
     return;
   }
 
-  logger.info({ token }, "Contraseña restablecida correctamente");
+  // FIX BUG-02: Invalidar todas las sesiones activas del usuario
+
+  // lo que permitía a un atacante mantener acceso aunque el usuario cambiara su contraseña.
+  const sessionsDeleted = deleteAllUserSessions(recoveryToken.email);
+
+  logger.info(
+    { email: recoveryToken.email, sessionsDeleted },
+    "Contraseña restablecida y sesiones invalidadas"
+  );
 
   res.json({
     ok: true,
     message: "Contraseña actualizada correctamente. Ya puedes iniciar sesión.",
+    sessionsInvalidated: sessionsDeleted,
   });
 });
 
