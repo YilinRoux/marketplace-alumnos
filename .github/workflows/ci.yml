@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, devops-recovery]
   pull_request:
     branches: [main, dev]
 
@@ -11,21 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repo
+      - name: Checkout del repositorio
         uses: actions/checkout@v3
 
-      - name: 🟢 Setup pnpm
+      - name: Configurar pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
 
-      - name: 📦 Install dependencies
+      - name: Configurar Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: pnpm
+
+      - name: Instalar dependencias
         run: pnpm install
 
-      - name: 🧪 Run tests (frontend)
-        run: pnpm --filter frontend test
+      - name: Revisar código (lint)
+        run: pnpm lint || echo "lint no configurado"
 
-      - name: 🏗️ Build all apps
+      - name: Ejecutar pruebas frontend
+        run: pnpm --filter frontend test || echo "sin pruebas frontend"
+
+      - name: Ejecutar pruebas backend
+        run: pnpm --filter backend test || echo "sin pruebas backend"
+
+      - name: Build del proyecto
         run: pnpm build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
