@@ -8,23 +8,15 @@ import { createClient } from "@supabase/supabase-js";
 import { logger } from "./logger";
 import { swaggerSpec } from "./swagger";
 import mockRoutes from "./mocks/mockRoutes";
-import { mockProducts } from "./mocks/mockData";
 import { requireAuth } from "./middleware/auth";
 import productsRouter from "./routes/products.router";
 import categoriesRouter from "./routes/categories.router";
+import sessionsRouter from "./routes/sessions.router";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// ─── Mock mode ────────────────────────────────────────────────
-// Se activa con USE_MOCK=true en .env, o cuando no hay SUPABASE_URL configurada
-const USE_MOCK = process.env.USE_MOCK === "true" || !process.env.SUPABASE_URL;
-
-if (USE_MOCK) {
-  logger.warn("⚠️  Modo MOCK activo — usando datos locales (sin Supabase)");
-}
 
 const app = express();
 
@@ -42,81 +34,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/mock", mockRoutes);
 
 // ─── Marketplace routes ───────────────────────────────────────
-if (USE_MOCK) {
-  // Categorías mock
-  app.get("/api/categories", (_req: Request, res: Response) => {
-    res.json([
-      { id: "1", name: "Electrónica",      slug: "electronics" },
-      { id: "2", name: "Libros",           slug: "books"       },
-      { id: "3", name: "Accesorios",       slug: "accessories" },
-      { id: "4", name: "Material Escolar", slug: "supplies"    },
-    ]);
-  });
+app.use("/api/products", productsRouter);
+app.use("/api/categories", categoriesRouter);
 
-  // Productos mock — respeta los mismos query params que el router real
-  app.get("/api/products", (req: Request, res: Response) => {
-    const { search, category, maxPrice, sort, page = "1", limit = "20" } = req.query;
-
-    let products = mockProducts.map((p) => ({
-      id: String(p.id),
-      title: p.name,
-      price: p.price,
-      condition: null,
-      created_at: new Date().toISOString(),
-      category: { name: p.category, slug: p.category },
-      seller: { id: String(p.sellerId), full_name: "Vendedor Demo" },
-    }));
-
-    // Filtros
-    if (search) {
-      const q = String(search).toLowerCase();
-      products = products.filter((p) => p.title.toLowerCase().includes(q));
-    }
-    if (category) {
-      products = products.filter((p) => p.category.slug === String(category));
-    }
-    if (maxPrice) {
-      products = products.filter((p) => p.price <= Number(maxPrice));
-    }
-
-    // Ordenamiento
-    if (sort === "price_asc")  products.sort((a, b) => a.price - b.price);
-    if (sort === "price_desc") products.sort((a, b) => b.price - a.price);
-
-    // Paginación
-    const pageNum  = Math.max(1, Number(page));
-    const limitNum = Math.max(1, Number(limit));
-    const total    = products.length;
-    const start    = (pageNum - 1) * limitNum;
-    const paged    = products.slice(start, start + limitNum);
-
-    res.json({
-      data: paged,
-      pagination: { page: pageNum, limit: limitNum, total },
-    });
-  });
-
-  // Producto individual mock
-  app.get("/api/products/:id", (req: Request, res: Response) => {
-    const product = mockProducts.find((p) => String(p.id) === req.params.id);
-    if (!product) {
-      res.status(404).json({ error: "Producto no encontrado" });
-      return;
-    }
-    res.json({
-      id: String(product.id),
-      title: product.name,
-      price: product.price,
-      condition: null,
-      created_at: new Date().toISOString(),
-      category: { name: product.category, slug: product.category },
-      seller: { id: String(product.sellerId), full_name: "Vendedor Demo" },
-    });
-  });
-} else {
-  app.use("/api/products",   productsRouter);
-  app.use("/api/categories", categoriesRouter);
-}
+// ─── Sessions routes ─────────────────────────────────────────────────────────
+app.use("/auth", sessionsRouter);
 
 // ─── Auth routes ─────────────────────────────────────────────
 
@@ -282,6 +204,8 @@ app.post("/auth/set-session", async (req: Request, res: Response) => {
  *       401: { description: No autenticado }
  */
 app.get("/auth/me", requireAuth, (req: Request, res: Response) => {
+  // requireAuth ya validó el token, hizo refresh si fue necesario,
+  // y cargó el perfil completo desde public.profiles en req.user
   res.json({ user: req.user });
 });
 
@@ -299,6 +223,7 @@ app.post("/auth/logout", async (req: Request, res: Response) => {
   try {
     const accessToken = req.cookies?.access_token;
 
+    // Invalidar el token en Supabase para prevenir replay attacks
     if (accessToken) {
       const { data: userData } = await supabase.auth.getUser(accessToken);
       if (userData?.user?.id) {
@@ -311,6 +236,7 @@ app.post("/auth/logout", async (req: Request, res: Response) => {
     res.clearCookie("refresh_token", { path: "/" });
     res.json({ ok: true });
   } catch (err) {
+    // Aunque falle la invalidación en Supabase, siempre limpiamos las cookies
     logger.error({ err }, "Error en /auth/logout (cookies limpiadas de todas formas)");
     res.clearCookie("access_token", { path: "/" });
     res.clearCookie("refresh_token", { path: "/" });
@@ -378,11 +304,10 @@ app.get("/health", (_: Request, res: Response) => {
     uptime: process.uptime(),
     service: "marketplace-alumnos-backend",
     version: "1.0.0",
-    mock: USE_MOCK,
     memory: {
-      rss:       `${Math.round(memoryUsage.rss       / 1024 / 1024)}MB`,
+      rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
-      heapUsed:  `${Math.round(memoryUsage.heapUsed  / 1024 / 1024)}MB`,
+      heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
     },
   };
   logger.debug(healthInfo, "Health check solicitado");
@@ -393,12 +318,17 @@ app.get("/health", (_: Request, res: Response) => {
 
 app.use((req: Request, res: Response) => {
   logger.warn({ path: req.originalUrl }, "Ruta no encontrada");
-  res.status(404).json({ error: "Ruta no encontrada", path: req.originalUrl });
+  res.status(404).json({
+    error: "Ruta no encontrada",
+    path: req.originalUrl,
+  });
 });
 
 app.use((err: Error, _: Request, res: Response, __: NextFunction) => {
   logger.error({ err }, "Error interno del servidor");
-  res.status(500).json({ error: "Error interno del servidor" });
+  res.status(500).json({
+    error: "Error interno del servidor",
+  });
 });
 
 // ─── Export y arranque ────────────────────────────────────────
