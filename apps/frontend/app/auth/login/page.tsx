@@ -4,8 +4,10 @@ export const dynamic = "force-dynamic";
 
 import React, { useState, useId } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "../../lib/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { ROUTES } from "../../lib/routes";
 import styles from "./login.module.css";
 
 // ── Ícono Google ──────────────────────────────────────────────────────────────
@@ -508,6 +510,12 @@ export default function LoginPage() {
                   {passwordError}
                 </span>
               )}
+            </div>
+
+            <div className={styles.forgotLink}>
+              <Link href={ROUTES.AUTH.FORGOT_PASSWORD}>
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
 
             {/* Botón submit */}

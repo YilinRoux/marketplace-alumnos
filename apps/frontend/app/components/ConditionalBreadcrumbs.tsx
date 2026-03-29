@@ -6,7 +6,7 @@ import Breadcrumbs from "./Breadcrumbs";
 export default function ConditionalBreadcrumbs() {
   const pathname = usePathname();
 
-  const hiddenRoutes = ["/", "/auth/login", "/auth/register"];
+  const hiddenRoutes = ["/", "/auth/login", "/auth/register", "/forgot-password", "/reset-password"];
 
   if (hiddenRoutes.includes(pathname)) return null;
 

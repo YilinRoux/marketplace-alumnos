@@ -143,6 +143,18 @@
 .input[aria-invalid="true"] { border-color: #e53e3e; }
 .fieldError { color: #e53e3e; font-size: 0.8rem; }
 .authError { background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.875rem; }
+.forgotLink {
+  text-align: right;
+  margin-bottom: 12px;
+}
+.forgotLink a {
+  font-size: 0.825rem;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+.forgotLink a:hover { text-decoration: underline; }
+
 .btnPrimary { width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
 .btnPrimary:disabled { opacity: 0.6; cursor: not-allowed; }
 
