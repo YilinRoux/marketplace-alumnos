@@ -12,6 +12,7 @@ import { requireAuth } from "./middleware/auth";
 import productsRouter from "./routes/products.router";
 import categoriesRouter from "./routes/categories.router";
 import sessionsRouter from "./routes/sessions.router";
+import recoveryRouter from "./routes/recovery.router";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -39,6 +40,9 @@ app.use("/api/categories", categoriesRouter);
 
 // ─── Sessions routes ─────────────────────────────────────────────────────────
 app.use("/auth", sessionsRouter);
+
+// ─── Recovery routes ─────────────────────────────────────────────────────────
+app.use("/auth/recovery", recoveryRouter);
 
 // ─── Auth routes ─────────────────────────────────────────────
 
@@ -204,8 +208,6 @@ app.post("/auth/set-session", async (req: Request, res: Response) => {
  *       401: { description: No autenticado }
  */
 app.get("/auth/me", requireAuth, (req: Request, res: Response) => {
-  // requireAuth ya validó el token, hizo refresh si fue necesario,
-  // y cargó el perfil completo desde public.profiles en req.user
   res.json({ user: req.user });
 });
 
@@ -223,7 +225,6 @@ app.post("/auth/logout", async (req: Request, res: Response) => {
   try {
     const accessToken = req.cookies?.access_token;
 
-    // Invalidar el token en Supabase para prevenir replay attacks
     if (accessToken) {
       const { data: userData } = await supabase.auth.getUser(accessToken);
       if (userData?.user?.id) {
@@ -236,7 +237,6 @@ app.post("/auth/logout", async (req: Request, res: Response) => {
     res.clearCookie("refresh_token", { path: "/" });
     res.json({ ok: true });
   } catch (err) {
-    // Aunque falle la invalidación en Supabase, siempre limpiamos las cookies
     logger.error({ err }, "Error en /auth/logout (cookies limpiadas de todas formas)");
     res.clearCookie("access_token", { path: "/" });
     res.clearCookie("refresh_token", { path: "/" });
@@ -246,24 +246,12 @@ app.post("/auth/logout", async (req: Request, res: Response) => {
 
 /**
  * @openapi
- * /auth/forgot-password:
- *   post:
- *     summary: Envía email de recuperación de contraseña
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email]
- *             properties:
- *               email: { type: string, format: email }
+ * /:
+ *   get:
+ *     summary: Health check endpoint
  *     responses:
- *       200: { description: Email enviado (siempre responde OK por seguridad) }
- *       400: { description: Email requerido }
- *       500: { description: Error interno del servidor }
+ *       200:
+ *         description: Backend is running correctly
  */
 app.post("/auth/forgot-password", async (req: Request, res: Response) => {
   try {
@@ -296,6 +284,17 @@ app.get("/", (_: Request, res: Response) => {
   res.send("Backend OK");
 });
 
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags:
+ *       - Health
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ */
 app.get("/health", (_: Request, res: Response) => {
   const memoryUsage = process.memoryUsage();
   const healthInfo = {
@@ -318,26 +317,17 @@ app.get("/health", (_: Request, res: Response) => {
 
 app.use((req: Request, res: Response) => {
   logger.warn({ path: req.originalUrl }, "Ruta no encontrada");
-  res.status(404).json({
-    error: "Ruta no encontrada",
-    path: req.originalUrl,
-  });
+  res.status(404).json({ error: "Ruta no encontrada", path: req.originalUrl });
 });
 
 app.use((err: Error, _: Request, res: Response, __: NextFunction) => {
   logger.error({ err }, "Error interno del servidor");
-  res.status(500).json({
-    error: "Error interno del servidor",
-  });
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
-// ─── Export y arranque ────────────────────────────────────────
-export default app;
+const PORT = process.env.PORT || 4000;
 
-if (process.env.NODE_ENV !== "test") {
-  const PORT = process.env.PORT || 4000;
-  app.listen(PORT, () => {
-    logger.info(`Backend corriendo en el puerto ${PORT}`);
-    logger.info(`Swagger UI disponible en http://localhost:${PORT}/api-docs`);
-  });
-}
+app.listen(PORT, () => {
+  logger.info(`Backend corriendo en el puerto ${PORT}`);
+  logger.info(`Swagger UI disponible en http://localhost:${PORT}/api-docs`);
+});
