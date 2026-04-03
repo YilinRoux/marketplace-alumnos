@@ -26,7 +26,7 @@ jobs:
         run: pnpm --filter frontend test
 
       - name: Ejecutar tests del backend (si existen)
-        run: pnpm --filter backend test || echo "No hay tests en backend"
+        run: pnpm --filter backend test || echo "Tests fallaron o no configurados correctamente"
 
       - name: Build del proyecto
         run: pnpm build
