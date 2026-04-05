@@ -1,8 +1,12 @@
+import RoleGuard from "../components/guards/RoleGuard";
+
 export default function AdminPage() {
   return (
-    <div>
-      <h1>Panel de Administración</h1>
-      {/* Supervisión para personal autorizado */}
-    </div>
+    <RoleGuard minRole="superadmin">
+      <div>
+        <h1>Panel de Administración</h1>
+        {/* Supervisión para personal autorizado */}
+      </div>
+    </RoleGuard>
   );
 }

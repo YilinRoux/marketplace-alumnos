@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "../../lib/AuthContext";
+import RoleGuard from "../../components/guards/RoleGuard";
 import styles from "./create.module.css";
 
 const DEMO_PRODUCTS_KEY = "um_demo_products";
@@ -87,123 +88,125 @@ export default function CreatePage() {
   };
 
   return (
-    <div className={styles.venderPage}>
-      <button className={styles.btnBackTop} onClick={() => router.back()}>←</button>
+    <RoleGuard minRole="user">
+      <div className={styles.venderPage}>
+        <button className={styles.btnBackTop} onClick={() => router.back()}>←</button>
 
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <span>Publicar producto</span>
-          <span style={{ color: "#64748b", fontSize: "0.9rem" }}>Paso {paso} de 3</span>
-        </div>
+        <div className={styles.card}>
+          <div className={styles.header}>
+            <span>Publicar producto</span>
+            <span style={{ color: "#64748b", fontSize: "0.9rem" }}>Paso {paso} de 3</span>
+          </div>
 
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${(paso / 3) * 100}%` }} />
-        </div>
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${(paso / 3) * 100}%` }} />
+          </div>
 
-        <div className={styles.stepContent}>
-          {paso === 1 && (
-            <div>
-              <div className={styles.uploadArea}>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className={styles.fileInput}
-                  onChange={handleFileChange}
-                />
-                <p>Click o arrastra tus fotos</p>
-                <span className={styles.imageCount}>
-                  {imagenes.length === 0
-                    ? "Sin imágenes (mínimo 6)"
-                    : `${imagenes.length} imagen${imagenes.length > 1 ? "es" : ""} subida${imagenes.length > 1 ? "s" : ""} ${imagenes.length < 6 ? `· faltan ${6 - imagenes.length}` : "✓"}`}
-                </span>
-              </div>
-              {imagenes.length > 0 && (
-                <div className={styles.previewGrid}>
-                  {imagenes.map((url, i) => (
-                    <img key={i} src={url} alt={`preview-${i}`} className={styles.previewImg} />
-                  ))}
+          <div className={styles.stepContent}>
+            {paso === 1 && (
+              <div>
+                <div className={styles.uploadArea}>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className={styles.fileInput}
+                    onChange={handleFileChange}
+                  />
+                  <p>Click o arrastra tus fotos</p>
+                  <span className={styles.imageCount}>
+                    {imagenes.length === 0
+                      ? "Sin imágenes (mínimo 6)"
+                      : `${imagenes.length} imagen${imagenes.length > 1 ? "es" : ""} subida${imagenes.length > 1 ? "s" : ""} ${imagenes.length < 6 ? `· faltan ${6 - imagenes.length}` : "✓"}`}
+                  </span>
                 </div>
-              )}
-            </div>
-          )}
+                {imagenes.length > 0 && (
+                  <div className={styles.previewGrid}>
+                    {imagenes.map((url, i) => (
+                      <img key={i} src={url} alt={`preview-${i}`} className={styles.previewImg} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {paso === 2 && (
-            <div>
-              <div className={styles.inputGroup}>
-                <label>Título</label>
-                <input
-                  type="text"
-                  placeholder="Ej: Laptop HP 15 pulgadas"
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Precio ($)</label>
-                <input
-                  type="number"
-                  placeholder="Ej: 500"
-                  value={precio}
-                  onChange={(e) => setPrecio(e.target.value)}
-                  min={0}
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Descripción</label>
-                <textarea
-                  rows={4}
-                  placeholder="Describe el estado y características..."
-                  value={descripcion}
-                  onChange={(e) => setDescripcion(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-
-          {paso === 3 && (
-            <div>
-              <div className={styles.inputGroup}>
-                <label>Selecciona una categoría</label>
-                <div className={styles.categoryGrid}>
-                  {CATEGORIAS.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategoria(cat)}
-                      className={`${styles.btnCategory} ${categoria === cat ? styles.active : ""}`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+            {paso === 2 && (
+              <div>
+                <div className={styles.inputGroup}>
+                  <label>Título</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Laptop HP 15 pulgadas"
+                    value={titulo}
+                    onChange={(e) => setTitulo(e.target.value)}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Precio ($)</label>
+                  <input
+                    type="number"
+                    placeholder="Ej: 500"
+                    value={precio}
+                    onChange={(e) => setPrecio(e.target.value)}
+                    min={0}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Descripción</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Describe el estado y características..."
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
+                  />
                 </div>
               </div>
-              <div className={styles.resumen}>
-                <h4>Resumen</h4>
-                <p><strong>Título:</strong> {titulo}</p>
-                <p><strong>Precio:</strong> ${precio}</p>
-                <p><strong>Categoría:</strong> {categoria}</p>
-                <p><strong>Imágenes:</strong> {imagenes.length}</p>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        <div className={styles.footer}>
-          {paso > 1 && (
-            <button className={styles.btnOutline} onClick={() => setPaso(paso - 1)}>
-              Atrás
+            {paso === 3 && (
+              <div>
+                <div className={styles.inputGroup}>
+                  <label>Selecciona una categoría</label>
+                  <div className={styles.categoryGrid}>
+                    {CATEGORIAS.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setCategoria(cat)}
+                        className={`${styles.btnCategory} ${categoria === cat ? styles.active : ""}`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.resumen}>
+                  <h4>Resumen</h4>
+                  <p><strong>Título:</strong> {titulo}</p>
+                  <p><strong>Precio:</strong> ${precio}</p>
+                  <p><strong>Categoría:</strong> {categoria}</p>
+                  <p><strong>Imágenes:</strong> {imagenes.length}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.footer}>
+            {paso > 1 && (
+              <button className={styles.btnOutline} onClick={() => setPaso(paso - 1)}>
+                Atrás
+              </button>
+            )}
+            <button
+              className={styles.btnSolid}
+              onClick={paso < 3 ? handleSiguiente : handlePublicar}
+              disabled={publicando}
+              style={{ marginLeft: paso === 1 ? "auto" : undefined }}
+            >
+              {paso < 3 ? "Siguiente →" : publicando ? "Publicando..." : "Publicar"}
             </button>
-          )}
-          <button
-            className={styles.btnSolid}
-            onClick={paso < 3 ? handleSiguiente : handlePublicar}
-            disabled={publicando}
-            style={{ marginLeft: paso === 1 ? "auto" : undefined }}
-          >
-            {paso < 3 ? "Siguiente →" : publicando ? "Publicando..." : "Publicar"}
-          </button>
+          </div>
         </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

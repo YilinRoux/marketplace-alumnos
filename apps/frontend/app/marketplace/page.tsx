@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { apiClient } from "../lib/apiClient";
 import styles from "./marketplace.module.css";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SkeletonCard from "../components/SkeletonCard/SkeletonCard";
@@ -94,7 +95,7 @@ export default function MarketplacePage() {
 
   // ── Fetch categorías ────────────────────────────────────────────────────────
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/categories`, { credentials: "include" })
+    apiClient("/api/categories")
       .then((r) => r.json())
       .then((data) => {
         const list: Category[] = Array.isArray(data)
@@ -121,7 +122,7 @@ export default function MarketplacePage() {
     params.set("limit", String(LIMIT));
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/products?${params.toString()}`, { credentials: "include" });
+      const res = await apiClient(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setProducts(Array.isArray(json.data) ? json.data : []);

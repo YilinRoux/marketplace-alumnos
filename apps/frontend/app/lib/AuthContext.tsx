@@ -126,24 +126,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 writeSessionCache(data.user);
                 setState({ status: "authenticated", user: data.user });
             } else {
-                // 401 — sesión real inválida, limpiar cache (no es demo)
                 clearSessionCache();
                 setState({ status: "unauthenticated", user: null });
             }
-        } catch {
-            // Error de red — usar cache si existe
+        } catch (error) {
             if (cached) {
+                console.log("[AuthContext:fetchUser] Falling back to standard cache");
                 setState({ status: "authenticated", user: cached });
             } else {
                 setState({ status: "unauthenticated", user: null });
             }
         }
-    }, []);
+    }, [BACKEND_URL]);
 
     // ─── onAuthStateChange: detecta login, logout y token refresh ─────────
     useEffect(() => {
         // Fetch inicial
         fetchUser();
+
+        // Listener global de interceptor 401
+        const handleUnauthorized = () => {
+            clearSessionCache();
+            setState({ status: "unauthenticated", user: null });
+            if (window.location.pathname !== "/auth/login") {
+                window.location.href = "/auth/login?expired=1";
+            }
+        };
+        window.addEventListener("um-unauthorized", handleUnauthorized as EventListener);
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
@@ -156,7 +165,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         session.access_token,
                         session.refresh_token!
                     );
+                    
                     if (sent) {
+                        // FIX: Introducimos un pequeño delay para evitar el Race Condition del "Set-Cookie".
+                        // En conexiones cross-origin locales, la reasignación interna del Cookie Jar del navegador 
+                        // toma microsegundos. Si lanzamos el fetch('auth/me') instantáneamente, no lleva las cookies
+                        // que backend acaba de firmar, resultando en un falso 401.
+                        await new Promise(r => setTimeout(r, 600));
                         await fetchUser();
                     }
                 }
@@ -169,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         return () => {
+            window.removeEventListener("um-unauthorized", handleUnauthorized as EventListener);
             subscription.unsubscribe();
         };
     }, [fetchUser]);
