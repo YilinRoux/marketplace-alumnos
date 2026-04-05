@@ -13,6 +13,7 @@ import productsRouter from "./routes/products.router";
 import categoriesRouter from "./routes/categories.router";
 import sessionsRouter from "./routes/sessions.router";
 import recoveryRouter from "./routes/recovery.router";
+import protectedRouter from "./routes/protected.router";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -43,6 +44,7 @@ app.use("/auth", sessionsRouter);
 
 // ─── Recovery routes ─────────────────────────────────────────────────────────
 app.use("/auth/recovery", recoveryRouter);
+app.use("/", protectedRouter);
 
 // ─── Auth routes ─────────────────────────────────────────────
 
