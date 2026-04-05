@@ -181,7 +181,6 @@ router.delete("/sessions/:id", requireSession as unknown as (req: Request, res: 
   res.json({ ok: true, message: "Sesión cerrada correctamente" });
 });
 
-// ─── POST /auth/logout-all ────────────────────────────────────────────────────
 
 /**
  * @openapi

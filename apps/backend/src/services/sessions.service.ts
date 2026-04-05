@@ -1,14 +1,14 @@
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "mi_secreto_super_seguro_123";
-const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hora en ms
+const TOKEN_EXPIRY_MS = 60 * 60 * 1000; 
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Session {
   id: string;
   userId: string;
   email: string;
+  role: "user" | "seller" | "superadmin";
   token: string;
   device: string;
   createdAt: Date;
@@ -22,7 +22,6 @@ export interface MockUser {
   role: "user" | "seller" | "superadmin";
 }
 
-// ─── Mock ───
 
 export const mockUsers: MockUser[] = [
   { id: "user-001", email: "omar@universidad.edu", name: "Omar Lazaro", role: "seller" },
@@ -30,11 +29,9 @@ export const mockUsers: MockUser[] = [
   { id: "user-003", email: "admin@universidad.edu", name: "Admin User", role: "superadmin" },
 ];
 
-// ─── In-memory session store ──────────────────────────────────────────────────
 
 const sessionStore = new Map<string, Session>();
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function generateSessionId(): string {
   return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -44,7 +41,6 @@ function isExpired(session: Session): boolean {
   return new Date() > session.expiresAt;
 }
 
-// ─── Service functions ────────────────────────────────────────────────────────
 
 export function findUserByCredentials(email: string, password: string): MockUser | null {
   if (password.length < 4) return null;
@@ -66,6 +62,7 @@ export function createSession(user: MockUser, device: string): Session {
     id: sessionId,
     userId: user.id,
     email: user.email,
+    role: user.role,
     token,
     device,
     createdAt: now,
