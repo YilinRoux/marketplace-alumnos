@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthContext";
 import ProductCard from "../components/ProductCard/ProductCard";
+import RoleGuard from "../components/guards/RoleGuard";
 import styles from "./profile.module.css";
 
 interface DemoProduct {
@@ -68,36 +69,38 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <h1 className={styles.title}>Mis Publicaciones Activas</h1>
+    <RoleGuard minRole="user">
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <h1 className={styles.title}>Mis Publicaciones Activas</h1>
 
-        {misProductos.length === 0 ? (
-          <div className={styles.empty}>
-            <p>Aún no tienes productos a la venta.</p>
-          </div>
-        ) : (
-          <div className={styles.grid}>
-            {misProductos.map((producto) => (
-              <div key={producto.id} className={styles.cardWrapper}>
-                <button
-                  className={styles.btnEliminar}
-                  onClick={() => handleEliminar(producto.id)}
-                >
-                  Eliminar
-                </button>
-                <ProductCard
-                  categoria={producto.categoria}
-                  titulo={producto.titulo}
-                  descripcion={producto.descripcion}
-                  estaVerificado={producto.estaVerificado}
-                  imagen={producto.imagen}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+          {misProductos.length === 0 ? (
+            <div className={styles.empty}>
+              <p>Aún no tienes productos a la venta.</p>
+            </div>
+          ) : (
+            <div className={styles.grid}>
+              {misProductos.map((producto) => (
+                <div key={producto.id} className={styles.cardWrapper}>
+                  <button
+                    className={styles.btnEliminar}
+                    onClick={() => handleEliminar(producto.id)}
+                  >
+                    Eliminar
+                  </button>
+                  <ProductCard
+                    categoria={producto.categoria}
+                    titulo={producto.titulo}
+                    descripcion={producto.descripcion}
+                    estaVerificado={producto.estaVerificado}
+                    imagen={producto.imagen}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

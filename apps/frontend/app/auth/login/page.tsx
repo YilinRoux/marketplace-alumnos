@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState, useId } from "react";
+import React, { useState, useId, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../lib/AuthContext";
@@ -157,7 +157,14 @@ function mapSupabaseError(message: string): string {
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
-  const { refresh } = useAuth();
+  const { refresh, status } = useAuth();
+
+  useEffect(() => {
+    // Redirección reactiva: espera a que el contexto termine de enlazar todo
+    if (status === "authenticated") {
+      router.push("/marketplace");
+    }
+  }, [status, router]);
 
   // IDs accesibles únicos
   const emailId = useId();
@@ -222,11 +229,7 @@ export default function LoginPage() {
           return;
         }
 
-        // onAuthStateChange in AuthContext handles token forwarding and fetchUser.
-        // Wait a moment for the state to propagate, then redirect.
-        await refresh();
-
-        router.push("/marketplace");
+        // Delegamos a la reactividad de status === "authenticated" para redirigir
       } else {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -302,8 +305,7 @@ export default function LoginPage() {
     }
 
     await refresh();
-
-    router.push("/marketplace");
+    // La redirección ocurrirá vía useEffect cuando el status acabe
   };
 
   // ── Render ────────────────────────────────────────────────────────────────────

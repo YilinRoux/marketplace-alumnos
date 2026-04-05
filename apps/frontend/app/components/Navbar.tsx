@@ -4,10 +4,13 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../lib/AuthContext";
+import { useAuthorization } from "../hooks/useAuthorization";
+import ProtectedUI from "./guards/ProtectedUI";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
-  const { status, user, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { status, isAuthenticated } = useAuthorization();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -68,13 +71,14 @@ export default function Navbar() {
           {navLink("/", "Inicio")}
           {navLink("/marketplace", "Explorar Tienda")}
 
-          {/* Solo visibles cuando está logueado */}
-          {status === "authenticated" && (
-            <>
-              {navLink("/marketplace/create", "Vender")}
-              {navLink("/profile", "Mis Ventas")}
-            </>
-          )}
+          <ProtectedUI>
+            {navLink("/marketplace/create", "Vender")}
+            {navLink("/profile", "Mis Ventas")}
+          </ProtectedUI>
+
+          <ProtectedUI minRole="superadmin">
+            {navLink("/admin", "Admin Dashboard")}
+          </ProtectedUI>
         </nav>
 
         {/* USER AREA */}
@@ -93,7 +97,7 @@ export default function Navbar() {
           )}
 
           {/* Autenticado */}
-          {status === "authenticated" && user && (
+          {isAuthenticated && user && (
             <>
               <button
                 className={styles.avatarBtn}
