@@ -63,20 +63,28 @@
 
 /* ── Password wrapper + eye toggle ── */
 .passwordWrapper { position: relative; display: flex; align-items: center; }
-.passwordWrapper .input { flex: 1; padding-right: 40px; }
+.passwordWrapper .input { flex: 1; padding-right: 48px; }
 .eyeBtn {
   position: absolute;
-  right: 8px;
-  background: none;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
   border: none;
+  box-shadow: none;
   cursor: pointer;
-  padding: 4px;
   display: flex;
   align-items: center;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  justify-content: center;
+  color: #94a3b8; /* text-slate-400 */
+  transition: color 0.2s ease;
+  outline: none;
 }
-.eyeBtn:hover { opacity: 1; }
+.eyeBtn:hover { color: #3b82f6; /* text-blue-500 */ }
 
 /* ── Separador ── */
 .separator {

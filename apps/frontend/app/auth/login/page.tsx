@@ -42,11 +42,11 @@ const GoogleIcon = () => (
 const EyeOpen = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="18"
-    height="18"
+    width="20"
+    height="20"
     fill="none"
     viewBox="0 0 24 24"
-    stroke="#6b7280"
+    stroke="currentColor"
     strokeWidth="2"
     aria-hidden="true"
   >
@@ -66,11 +66,11 @@ const EyeOpen = () => (
 const EyeClosed = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="18"
-    height="18"
+    width="20"
+    height="20"
     fill="none"
     viewBox="0 0 24 24"
-    stroke="#6b7280"
+    stroke="currentColor"
     strokeWidth="2"
     aria-hidden="true"
   >
@@ -449,7 +449,7 @@ export default function LoginPage() {
               </div>
 
               {/* Checklist de requisitos — desaparece cuando todos se cumplen */}
-              {password && passwordStrength.level !== "fuerte" && (
+              {!isLogin && password && passwordStrength.level !== "fuerte" && (
                 <ul
                   className={styles.checkList}
                   aria-label="Requisitos de contraseña"
@@ -478,7 +478,7 @@ export default function LoginPage() {
               )}
 
               {/* Barra de fortaleza */}
-              {password && (
+              {!isLogin && password && (
                 <div className={styles.strengthWrapper}>
                   <div className={styles.strengthBar}>
                     <div
