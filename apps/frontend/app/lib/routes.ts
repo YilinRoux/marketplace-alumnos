@@ -24,8 +24,13 @@ export const ROUTES = {
       SETTINGS: "/dashboard/settings",
     },
   
-    // Supervisión (Personal Autorizado )
-    ADMIN: "/admin",
+    // Supervisión (Personal Autorizado)
+    ADMIN: {
+      ROOT: "/admin",
+      USERS: "/admin/users",
+      PRODUCTS: "/admin/products",
+      MODERATION: "/admin/moderation",
+    },
 
     // Páginas de Error
     ERROR: {
