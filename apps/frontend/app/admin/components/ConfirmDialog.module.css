@@ -1,0 +1,145 @@
+/* ═══════════════════════════════════════════════
+   ConfirmDialog — Modal de confirmación
+   ═══════════════════════════════════════════════ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOverlay 0.15s ease-out;
+  padding: 20px;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── Icon ──────────────────────────────────── */
+
+.iconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.iconDanger {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.iconWarning {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.iconInfo {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* ─── Content ───────────────────────────────── */
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.message {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+/* ─── Actions ───────────────────────────────── */
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btnCancel {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  transition: all 0.15s ease;
+  width: auto;
+}
+
+.btnCancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.btnConfirm {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  color: #ffffff;
+  transition: all 0.15s ease;
+  width: auto;
+}
+
+.btnDanger {
+  background: #ef4444;
+}
+
+.btnDanger:hover {
+  background: #dc2626;
+}
+
+.btnWarning {
+  background: #f59e0b;
+}
+
+.btnWarning:hover {
+  background: #d97706;
+}
+
+.btnInfo {
+  background: #3b82f6;
+}
+
+.btnInfo:hover {
+  background: #2563eb;
+}

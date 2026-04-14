@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════════════
+   StatusBadge — Indicador visual de estado
+   ═══════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+/* ─── Status Colors ─────────────────────────── */
+
+.active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.blocked {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.inactive {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.reported {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.deleted {
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+
+.reviewed {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.resolved {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.dismissed {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+/* ─── Roles ─────────────────────────────────── */
+
+.user {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.seller {
+  background: rgba(139, 92, 246, 0.1);
+  color: #7c3aed;
+}
+
+.superadmin {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
