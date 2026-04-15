@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build"
+    "build": "npx turbo run build"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
